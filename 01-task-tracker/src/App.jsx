@@ -2,6 +2,7 @@ import './App.css'
 import {useState} from 'react'
 
 import TaskList from './TaskList.jsx'
+import AddTaskForm from './addTaskForm.jsx'
 
 function App(){
 
@@ -33,21 +34,13 @@ function App(){
     <div>
       <h1>Task Tracker</h1>
 
-      <input
-        value={name}
-        onChange={(event)=>setName(event.target.value)}
+      <AddTaskForm
+        name={name}
+        setName={setName}
+        createdby={createdby}
+        setCreatedby={setCreatedby}
+        addTask={addTask}
       />
-
-      <input 
-        value={createdby}
-        onChange={(event)=>setCreatedby(event.target.value)}
-      />
-
-      <button
-        onClick={addTask}
-      >
-        Add Task
-      </button>
 
       <TaskList tasks={tasks}/>
     </div>
