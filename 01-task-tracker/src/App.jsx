@@ -1,6 +1,8 @@
 import './App.css'
 import {useState} from 'react'
 
+import TaskList from './TaskList.jsx'
+
 function App(){
 
   const [name, setName] = useState('')
@@ -47,31 +49,7 @@ function App(){
         Add Task
       </button>
 
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Created By</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {
-            tasks.map(
-              (task) => (
-                <tr key={task.id}> 
-                  <td>{task.name}</td>
-                  <td>{task.created_by}</td>
-                  <td>
-                    <button>Delete</button>
-                  </td>
-                </tr>
-              )
-            )
-          }
-        </tbody>
-      </table>
+      <TaskList tasks={tasks}/>
     </div>
   )
 }
