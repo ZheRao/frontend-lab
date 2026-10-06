@@ -1,10 +1,14 @@
-function TaskRow({task}){
+function TaskRow({task, deleteTask}){
     return (
         <tr>
             <td>{task.name}</td>
             <td>{task.created_by}</td>
             <td>
-                <button>Delete</button>
+                <button
+                  onClick={()=>deleteTask(task.id)}
+                >
+                  Delete
+                </button>
             </td>
         </tr>
     )

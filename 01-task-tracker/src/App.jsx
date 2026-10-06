@@ -22,12 +22,13 @@ function App(){
       name: `${name}`,
       created_by: `${createdby}`
     }
-    const append = (old_array, new_value) => {
-      return [...old_array, new_value]
-    }
     setTasks([...tasks, new_item])
     setName('')
     setCreatedby('')
+  }
+
+  const deleteTask = (id) => {
+    setTasks(tasks.filter((task) => (task.id!==id)))
   }
   
   return (
@@ -42,7 +43,10 @@ function App(){
         addTask={addTask}
       />
 
-      <TaskList tasks={tasks}/>
+      <TaskList 
+        tasks={tasks}
+        deleteTask={deleteTask}
+      />
     </div>
   )
 }

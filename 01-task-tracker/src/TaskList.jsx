@@ -1,6 +1,6 @@
 import TaskRow from './TaskRow.jsx'
 
-function TaskList({tasks}){
+function TaskList({tasks,deleteTask}){
     return (
         <table>
             <thead>
@@ -17,6 +17,7 @@ function TaskList({tasks}){
                         <TaskRow 
                             key={task.id}
                             task={task}
+                            deleteTask={deleteTask}
                         />
                     )
                 }
