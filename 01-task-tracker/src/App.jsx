@@ -12,6 +12,20 @@ function App(){
   ]
 
   const [tasks, setTasks] = useState(task_init)
+
+  const addTask = () => {
+    const new_item = {
+      id: tasks.at(-1).id + 1,
+      name: `${name}`,
+      created_by: `${createdby}`
+    }
+    const append = (old_array, new_value) => {
+      return [...old_array, new_value]
+    }
+    setTasks([...tasks, new_item])
+    setName('')
+    setCreatedby('')
+  }
   
   return (
     <div>
@@ -22,16 +36,14 @@ function App(){
         onChange={(event)=>setName(event.target.value)}
       />
 
-      <p>{name}</p>
-
       <input 
         value={createdby}
         onChange={(event)=>setCreatedby(event.target.value)}
       />
 
-      <p>{createdby}</p>
-
-      <button>
+      <button
+        onClick={addTask}
+      >
         Add Task
       </button>
 
@@ -48,7 +60,7 @@ function App(){
           {
             tasks.map(
               (task) => (
-                <tr>
+                <tr key={task.id}> 
                   <td>{task.name}</td>
                   <td>{task.created_by}</td>
                   <td>
