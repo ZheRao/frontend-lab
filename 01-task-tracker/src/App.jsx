@@ -1,15 +1,39 @@
 import './App.css'
+import {useState} from 'react'
 
 function App(){
+
+  const [name, setName] = useState('')
+  const [createdby, setCreatedby] = useState('')
 
   const task_init = [
     {id: 1, name: "Read DDIA", created_by: "Zhe"},
     {id: 2, name: "Practice piano", created_by: "ChatGPT"}
   ]
+
+  const [tasks, setTasks] = useState(task_init)
   
   return (
     <div>
       <h1>Task Tracker</h1>
+
+      <input
+        value={name}
+        onChange={(event)=>setName(event.target.value)}
+      />
+
+      <p>{name}</p>
+
+      <input 
+        value={createdby}
+        onChange={(event)=>setCreatedby(event.target.value)}
+      />
+
+      <p>{createdby}</p>
+
+      <button>
+        Add Task
+      </button>
 
       <table>
         <thead>
@@ -22,7 +46,7 @@ function App(){
 
         <tbody>
           {
-            task_init.map(
+            tasks.map(
               (task) => (
                 <tr>
                   <td>{task.name}</td>
