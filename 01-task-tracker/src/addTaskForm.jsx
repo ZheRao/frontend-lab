@@ -1,5 +1,6 @@
+import ErrorPopup from "./ErrorPopup.jsx"
 
-function AddTaskForm({name, setName, createdby, setCreatedby, addTask, isBusy, error}){
+function AddTaskForm({name, setName, createdby, setCreatedby, addTask, isBusy, error, setError}){
     return (
         <div>
             <input 
@@ -19,7 +20,13 @@ function AddTaskForm({name, setName, createdby, setCreatedby, addTask, isBusy, e
                 {isBusy ? 'Adding...' : 'Add Task'}
             </button>
 
-            {error && <p>{error}</p>}
+            {error && (
+              <ErrorPopup 
+                message={error}
+                onRetry={addTask}
+                onClose={()=>setError(null)}
+              />
+            )}
 
         </div>
     )

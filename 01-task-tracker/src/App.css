@@ -12,3 +12,18 @@ table td {
 table td {
   text-align: left;
 }
+
+.overlay {
+  position: fixed;
+  inset: 0;       /* stretch over the whole viewpoint*/
+  background: rgba(0, 0, 0, 0.4);  /* dim the page behind */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.popup {
+  background: white;
+  padding: 16px;
+  border-radius: 8px;
+}

@@ -56,6 +56,7 @@ function App(){
         addTask={addTask}
         isBusy={isBusy}
         error={error}
+        setError={setError}
       />
 
       <TaskList 
