@@ -6,10 +6,13 @@ export function fakeCreateTask(){
     // promise is an object representing: A result that may become available later
     return new Promise ((resolve) => {  // resolve: "here's your done button, I'll call it resolve"
         // brower, arrange for this function to run after at least approximately 2 second
-        setTimeout(() => {  // "in 2 seconds ..."
+        setTimeout(() => {  
             console.log("API operation finished")
-            resolve()   // "... press the done button"
-                        // also if you have 'resolve(4)', then whoever is doing 'await' gets '4' back
+            resolve({
+                id: 99,
+                name: "Server-created task",
+                created_by: "Fake Server"
+            })   
         }, 2000)
     })
 }

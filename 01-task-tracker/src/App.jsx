@@ -8,21 +8,30 @@ import { fakeCreateTask } from './fakeAPI.js'
 function App(){
 
   // async experiment
-  const experiment = () => {
+  const experiment = async () => {
     console.log("1: before")
 
-    const result = fakeCreateTask()
+    // call 'fakeCreateTask()', it gives me a Promise.
+    //  suspend the rest of this async function's execution until that Prommise settles
+    //  when it fulfills, give me its fulfilled value
+    const result = await fakeCreateTask()
 
-    console.log("2: result =", result)  // promise returned, result available later
+    console.log("2: result =", result) 
     console.log("3: after")
 
-    // console log will be
-    //  immediate:
-    //    1: before
-    //    2: result = Promise {<pending>}
-    //    3: after
+    // click 'Async Experiment', then immediately click 'Other Button'
+    //  immediate
+    //    1. before
+    //    OTHER BUTTON CLICKED
     //  2 seconds later
     //    API operation finished
+    //    2. result = {
+    //                    "id": 99,
+    //                    "name": "Server-created task",
+    //                    "created_by": "Fake Server"
+    //                }
+    //    3. after
+
   }
 
   const [name, setName] = useState('')
@@ -77,6 +86,12 @@ function App(){
        onClick={experiment}
       >
         Async Experiment
+      </button>
+
+      <button
+       onClick={()=>console.log("OTHER BUTTON CLICKED")}
+      >
+        Other Button
       </button>
     </div>
   )
