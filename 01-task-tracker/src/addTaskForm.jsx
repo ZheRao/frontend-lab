@@ -1,5 +1,5 @@
 
-function AddTaskForm({name, setName, createdby, setCreatedby, addTask, isBusy}){
+function AddTaskForm({name, setName, createdby, setCreatedby, addTask, isBusy, error}){
     return (
         <div>
             <input 
@@ -18,6 +18,8 @@ function AddTaskForm({name, setName, createdby, setCreatedby, addTask, isBusy}){
             >
                 {isBusy ? 'Adding...' : 'Add Task'}
             </button>
+
+            {error && <p>{error}</p>}
 
         </div>
     )
