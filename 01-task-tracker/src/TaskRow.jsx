@@ -1,24 +1,24 @@
 import {useState} from 'react'
 
 function TaskRow({task, deleteTask, renameTask}){
-    // introduce local state isEditing because each TaskRow owns its own UI mode
-    const [isEditing, setIsEditing] = useState(false)
+    // modify 'isEditing' state to 'mode' state that takes 'view' or 'edit'
+    const [mode, setMode] = useState('view')
     // draft for task name
     const [draftName, setDraftName] = useState(task.name)
     // reset draft state because react preserves TaskRow component's state
     const startEdit = () => {
-        setIsEditing(true)
+        setMode('edit')
         setDraftName(task.name)
     }
-    // save commits draft and reset isEditing
+    // save commits draft and set mode to 'view'
     const saveEdit = () => {
         renameTask(task.id, draftName)
-        setIsEditing(false)
+        setMode('view')
     }
 
     return (
         <tr>
-            {isEditing ? (
+            {mode==='edit' ? (
                 <>
                     <td>
                         <input 
@@ -34,13 +34,13 @@ function TaskRow({task, deleteTask, renameTask}){
                             Save
                         </button>
                         <button
-                          onClick={()=>(setIsEditing(false))}
+                          onClick={()=>(setMode('view'))}
                         >
                             Cancel
                         </button>
                     </td>
                 </>
-            ) : (
+            ) : mode==='view' ? (
                 <>
                     <td>{task.name}</td>
                     <td>{task.created_by}</td>
@@ -57,7 +57,7 @@ function TaskRow({task, deleteTask, renameTask}){
                         </button>
                     </td>
                 </>
-            )}
+            ) : null}
         </tr>
     )
 }
