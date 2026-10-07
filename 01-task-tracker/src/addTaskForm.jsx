@@ -1,5 +1,5 @@
 
-function AddTaskForm({name, setName, createdby, setCreatedby, addTask}){
+function AddTaskForm({name, setName, createdby, setCreatedby, addTask, isBusy}){
     return (
         <div>
             <input 
@@ -14,8 +14,9 @@ function AddTaskForm({name, setName, createdby, setCreatedby, addTask}){
 
             <button
               onClick={addTask}
+              disabled={isBusy}
             >
-                Add Task
+                {isBusy ? 'Adding...' : 'Add Task'}
             </button>
 
         </div>

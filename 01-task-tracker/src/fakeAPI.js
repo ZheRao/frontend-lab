@@ -1,14 +1,15 @@
 
+let nextId = 100
 
-
-export function fakeCreateTask(){
+export function fakeCreateTask(name, createdby){
     return new Promise ((resolve) => {  
         setTimeout(() => {  
             resolve({
-                id: 99,
-                name: "Server-created task",
-                created_by: "Fake Server"
+                id: nextId,
+                name: `${name}`,
+                created_by: `${createdby}`
             })   
+            nextId = nextId + 1
         }, 2000)
     })
 }

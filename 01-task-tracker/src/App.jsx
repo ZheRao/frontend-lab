@@ -9,6 +9,7 @@ function App(){
 
   const [name, setName] = useState('')
   const [createdby, setCreatedby] = useState('')
+  const [isBusy, setIsBusy] = useState(false)
 
   const task_init = [
     {id: 1, name: "Read DDIA", created_by: "Zhe"},
@@ -17,15 +18,17 @@ function App(){
 
   const [tasks, setTasks] = useState(task_init)
 
-  const addTask = () => {
-    const new_item = {
-      id: tasks.at(-1).id + 1,
-      name: `${name}`,
-      created_by: `${createdby}`
+  const addTask = async () => {
+    setIsBusy(true)
+    try {
+      const createdTask = await fakeCreateTask(name,createdby)
+      setTasks([...tasks, createdTask])
+      setName('')
+      setCreatedby('')
+    } finally {   // always re-enable the buttons
+      setIsBusy(false)
     }
-    setTasks([...tasks, new_item])
-    setName('')
-    setCreatedby('')
+    
   }
 
   const deleteTask = (id) => {
@@ -47,6 +50,7 @@ function App(){
         createdby={createdby}
         setCreatedby={setCreatedby}
         addTask={addTask}
+        isBusy={isBusy}
       />
 
       <TaskList 
