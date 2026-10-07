@@ -3,12 +3,24 @@ import {useState} from 'react'
 function TaskRow({task, deleteTask}){
     // introduce local state isEditing because each TaskRow owns its own UI mode
     const [isEditing, setIsEditing] = useState(false)
+    // draft for task name
+    const [draftName, setDraftName] = useState(task.name)
+    // reset draft state because react preserves TaskRow component's state
+    const startEdit = () => {
+        setIsEditing(true)
+        setDraftName(task.name)
+    }
 
     return (
         <tr>
             {isEditing ? (
                 <>
-                    <td>Editting!!!</td>
+                    <td>
+                        <input 
+                          value={draftName}
+                          onChange={(event)=>(setDraftName(event.target.value))}
+                        />
+                    </td>
                     <td>{task.created_by}</td>
                     <td>
                         <button>
@@ -27,7 +39,7 @@ function TaskRow({task, deleteTask}){
                     <td>{task.created_by}</td>
                     <td>
                         <button
-                          onClick={()=>(setIsEditing(true))}
+                          onClick={startEdit}
                         >
                             Rename
                         </button>
