@@ -1,6 +1,6 @@
 import {useState} from 'react'
 
-function TaskRow({task, deleteTask}){
+function TaskRow({task, deleteTask, renameTask}){
     // introduce local state isEditing because each TaskRow owns its own UI mode
     const [isEditing, setIsEditing] = useState(false)
     // draft for task name
@@ -9,6 +9,11 @@ function TaskRow({task, deleteTask}){
     const startEdit = () => {
         setIsEditing(true)
         setDraftName(task.name)
+    }
+    // save commits draft and reset isEditing
+    const saveEdit = () => {
+        renameTask(task.id, draftName)
+        setIsEditing(false)
     }
 
     return (
@@ -23,7 +28,9 @@ function TaskRow({task, deleteTask}){
                     </td>
                     <td>{task.created_by}</td>
                     <td>
-                        <button>
+                        <button
+                          onClick={saveEdit}
+                        >
                             Save
                         </button>
                         <button

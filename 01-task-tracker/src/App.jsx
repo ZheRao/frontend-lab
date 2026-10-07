@@ -30,6 +30,11 @@ function App(){
   const deleteTask = (id) => {
     setTasks(tasks.filter((task) => (task.id!==id)))
   }
+
+  const renameTask = (id, newName) => {
+    const new_tasks = tasks.map((task)=>(task.id===id ? {...task, name: newName} : task))
+    setTasks(new_tasks)
+  }
   
   return (
     <div>
@@ -46,6 +51,7 @@ function App(){
       <TaskList 
         tasks={tasks}
         deleteTask={deleteTask}
+        renameTask={renameTask}
       />
     </div>
   )
