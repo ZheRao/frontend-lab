@@ -3,8 +3,27 @@ import {useState} from 'react'
 
 import TaskList from './TaskList.jsx'
 import AddTaskForm from './addTaskForm.jsx'
+import { fakeCreateTask } from './fakeAPI.js'
 
 function App(){
+
+  // async experiment
+  const experiment = () => {
+    console.log("1: before")
+
+    const result = fakeCreateTask()
+
+    console.log("2: result =", result)  // promise returned, result available later
+    console.log("3: after")
+
+    // console log will be
+    //  immediate:
+    //    1: before
+    //    2: result = Promise {<pending>}
+    //    3: after
+    //  2 seconds later
+    //    API operation finished
+  }
 
   const [name, setName] = useState('')
   const [createdby, setCreatedby] = useState('')
@@ -53,6 +72,12 @@ function App(){
         deleteTask={deleteTask}
         renameTask={renameTask}
       />
+
+      <button
+       onClick={experiment}
+      >
+        Async Experiment
+      </button>
     </div>
   )
 }
