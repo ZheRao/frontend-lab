@@ -1,9 +1,10 @@
 import './App.css'
-import {useState} from 'react'
+import {useState, useEffect} from 'react'
 
 import TaskList from './TaskList.jsx'
 import AddTaskForm from './addTaskForm.jsx'
-import { fakeCreateTask } from './fakeAPI.js'
+import { fakeCreateTask, fakeGetTasks } from './fakeAPI.js'
+import LoadingPopup from './LoadingPopup.jsx'
 
 function App(){
 
@@ -11,13 +12,22 @@ function App(){
   const [createdby, setCreatedby] = useState('')
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState(null)  // initialize as null, not ''
+  // resolve the ambiguity between initial empty tasks vs. waiting server to respond
+  //  signals we're retrieving the initial task list
+  const [isLoading, setIsLoading] = useState(true)
 
-  const task_init = [
-    {id: 1, name: "Read DDIA", created_by: "Zhe"},
-    {id: 2, name: "Practice piano", created_by: "ChatGPT"}
-  ]
+  const [tasks, setTasks] = useState([])
 
-  const [tasks, setTasks] = useState(task_init)
+  // initial load
+  const loadTasks = async () => {
+    const tasks_init = await fakeGetTasks()
+    setTasks(tasks_init)
+    setIsLoading(false)
+  }
+
+  useEffect(() => {
+    loadTasks()
+  }, [])
 
   const addTask = async () => {
     setIsBusy(true)
@@ -55,22 +65,29 @@ function App(){
     <div>
       <h1>Task Tracker</h1>
 
-      <AddTaskForm
-        name={name}
-        setName={setName}
-        createdby={createdby}
-        setCreatedby={setCreatedby}
-        addTask={addTask}
-        isBusy={isBusy}
-        error={error}
-        setError={setError}
-      />
+      {isLoading 
+        ?
+        <LoadingPopup />
+        :
+        <>
+          <AddTaskForm
+            name={name}
+            setName={setName}
+            createdby={createdby}
+            setCreatedby={setCreatedby}
+            addTask={addTask}
+            isBusy={isBusy}
+            error={error}
+            setError={setError}
+          />
 
-      <TaskList 
-        tasks={tasks}
-        deleteTask={deleteTask}
-        renameTask={renameTask}
-      />
+          <TaskList 
+            tasks={tasks}
+            deleteTask={deleteTask}
+            renameTask={renameTask}
+          />
+        </>
+      }
 
     </div>
   )

@@ -14,3 +14,16 @@ export function fakeCreateTask(name, createdby){
         }, 2000)
     })
 }
+
+export function fakeGetTasks(){
+    return new Promise((resolve) => {
+        setTimeout(() => {
+            resolve(
+                [
+                    {id: 1, name: "Read DDIA", created_by: "Zhe"},
+                    {id: 2, name: "Practice piano", created_by: "ChatGPT"}
+                ]
+            )
+        }, 2000)
+    })
+}
