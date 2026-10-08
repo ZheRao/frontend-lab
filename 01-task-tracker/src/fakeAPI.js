@@ -16,14 +16,15 @@ export function fakeCreateTask(name, createdby){
 }
 
 export function fakeGetTasks(){
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
         setTimeout(() => {
             resolve(
                 [
-                    {id: 1, name: "Read DDIA", created_by: "Zhe"},
-                    {id: 2, name: "Practice piano", created_by: "ChatGPT"}
+                    // {id: 1, name: "Read DDIA", created_by: "Zhe"},
+                    // {id: 2, name: "Practice piano", created_by: "ChatGPT"}
                 ]
             )
+            // reject (new Error("unable to retrieve initial task list"))
         }, 2000)
     })
 }

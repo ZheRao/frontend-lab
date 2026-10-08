@@ -4,7 +4,9 @@ function ErrorPopup({message, onRetry, onClose}){
             <div className="popup">
                 <p>{message}</p>
                 <button onClick={onRetry}>Try again</button>
-                <button onClick={onClose}>Close</button>
+                {onClose && (
+                    <button onClick={onClose}>Close</button>
+                )}
             </div>
         </div>
     )

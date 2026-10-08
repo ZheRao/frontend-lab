@@ -5,6 +5,7 @@ import TaskList from './TaskList.jsx'
 import AddTaskForm from './addTaskForm.jsx'
 import { fakeCreateTask, fakeGetTasks } from './fakeAPI.js'
 import LoadingPopup from './LoadingPopup.jsx'
+import ErrorPopup from './ErrorPopup.jsx'
 
 function App(){
 
@@ -12,6 +13,7 @@ function App(){
   const [createdby, setCreatedby] = useState('')
   const [isBusy, setIsBusy] = useState(false)
   const [error, setError] = useState(null)  // initialize as null, not ''
+  const [loadingError, setLoadingError] = useState(null)
   // resolve the ambiguity between initial empty tasks vs. waiting server to respond
   //  signals we're retrieving the initial task list
   const [isLoading, setIsLoading] = useState(true)
@@ -20,9 +22,17 @@ function App(){
 
   // initial load
   const loadTasks = async () => {
-    const tasks_init = await fakeGetTasks()
-    setTasks(tasks_init)
-    setIsLoading(false)
+    setIsLoading(true)
+    setLoadingError(null)
+    try {
+      const tasks_init = await fakeGetTasks()
+      setTasks(tasks_init)
+      
+    } catch(err) {
+      setLoadingError('Error!!!!! ' + err.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
@@ -65,28 +75,40 @@ function App(){
     <div>
       <h1>Task Tracker</h1>
 
-      {isLoading 
-        ?
-        <LoadingPopup />
-        :
-        <>
-          <AddTaskForm
-            name={name}
-            setName={setName}
-            createdby={createdby}
-            setCreatedby={setCreatedby}
-            addTask={addTask}
-            isBusy={isBusy}
-            error={error}
-            setError={setError}
+      {isLoading ? <LoadingPopup />
+        : loadingError 
+        ? (
+          <ErrorPopup 
+            message={loadingError}
+            onRetry={loadTasks}
+            onClose={null}
           />
+        ) : (
+          <>
+            <AddTaskForm
+              name={name}
+              setName={setName}
+              createdby={createdby}
+              setCreatedby={setCreatedby}
+              addTask={addTask}
+              isBusy={isBusy}
+              error={error}
+              setError={setError}
+            />
 
-          <TaskList 
-            tasks={tasks}
-            deleteTask={deleteTask}
-            renameTask={renameTask}
-          />
-        </>
+            {tasks.length === 0 ? (
+                <p>No Tasks Yet</p>
+              ) : (
+                <TaskList 
+                  tasks={tasks}
+                  deleteTask={deleteTask}
+                  renameTask={renameTask}
+                />
+              )
+            }
+            
+          </>
+        )
       }
 
     </div>
