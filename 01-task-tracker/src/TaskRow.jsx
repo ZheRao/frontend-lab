@@ -1,6 +1,6 @@
 import {useState} from 'react'
 
-function TaskRow({task, deleteTask, renameTask}){
+function TaskRow({task, deleteTask, renameTask, isBusy}){
     // modify 'isEditing' state to 'mode' state that takes 'view' or 'edit'
     const [mode, setMode] = useState('view')
     // draft for task name
@@ -47,11 +47,13 @@ function TaskRow({task, deleteTask, renameTask}){
                     <td>
                         <button
                           onClick={startEdit}
+                          disabled={isBusy}
                         >
                             Rename
                         </button>
                         <button
                           onClick={()=>deleteTask(task.id)}
+                          disabled={isBusy}
                         >
                             Delete
                         </button>

@@ -1,6 +1,6 @@
 import TaskRow from './TaskRow.jsx'
 
-function TaskList({tasks,deleteTask,renameTask}){
+function TaskList({tasks,deleteTask,renameTask,isBusy}){
     return (
         <table>
             <thead>
@@ -19,6 +19,7 @@ function TaskList({tasks,deleteTask,renameTask}){
                             task={task}
                             deleteTask={deleteTask}
                             renameTask={renameTask}
+                            isBusy={isBusy}
                         />
                     )
                 }

@@ -3,7 +3,11 @@ import {useState, useEffect} from 'react'
 
 import TaskList from './TaskList.jsx'
 import AddTaskForm from './addTaskForm.jsx'
-import { fakeCreateTask, fakeGetTasks } from './fakeAPI.js'
+import { 
+  fakeCreateTask, 
+  fakeGetTasks, 
+  fakeDeleteTasks 
+} from './fakeAPI.js'
 import LoadingPopup from './LoadingPopup.jsx'
 import ErrorPopup from './ErrorPopup.jsx'
 
@@ -12,8 +16,7 @@ function App(){
   const [name, setName] = useState('')
   const [createdby, setCreatedby] = useState('')
   const [isBusy, setIsBusy] = useState(false)
-  const [error, setError] = useState(null)  // initialize as null, not ''
-  const [loadingError, setLoadingError] = useState(null)
+  const [errorDialog, setErrorDialog] = useState(null) // has message, retry, canClose
   // resolve the ambiguity between initial empty tasks vs. waiting server to respond
   //  signals we're retrieving the initial task list
   const [isLoading, setIsLoading] = useState(true)
@@ -23,13 +26,20 @@ function App(){
   // initial load
   const loadTasks = async () => {
     setIsLoading(true)
-    setLoadingError(null)
+    setErrorDialog(null)
     try {
       const tasks_init = await fakeGetTasks()
       setTasks(tasks_init)
       
     } catch(err) {
-      setLoadingError('Error!!!!! ' + err.message)
+      const error_message = 'Error!!!!! ' + err.message
+      const retry_action = ()=>loadTasks()
+      const can_close = false 
+      setErrorDialog({
+        message: error_message,
+        retry: retry_action,
+        canClose: can_close
+      })
     } finally {
       setIsLoading(false)
     }
@@ -41,24 +51,47 @@ function App(){
 
   const addTask = async () => {
     setIsBusy(true)
-    setError(null)
+    setErrorDialog(null)
     try {
       const createdTask = await fakeCreateTask(name,createdby)
       setTasks(current => [...current, createdTask])
       setName('')
       setCreatedby('')
     } catch (err) {
-      setError('Error!!!! ' + err.message)
+      const error_message = 'Error!!!! ' + err.message
+      const retry_action = () => addTask()
+      const can_close = true
+      setErrorDialog({
+        message: error_message,
+        retry: retry_action,
+        canClose: can_close
+      })
     } finally {   // always re-enable the buttons
       setIsBusy(false)
     }
     
   }
 
-  const deleteTask = (id) => {
-    setTasks(current => 
-      current.filter((task) => (task.id!==id))
-    )
+  const deleteTask = async (id) => {
+    setIsBusy(true)
+    setErrorDialog(null)
+    try {
+      const response = await fakeDeleteTasks(id)
+      setTasks(current => 
+        current.filter((task) => (task.id!==id))
+      )
+    } catch(err) {
+      const error_message = 'Error!!!! ' + err.message
+      const retry_action = () => deleteTask(id)
+      const can_close = true
+      setErrorDialog({
+        message: error_message,
+        retry: retry_action,
+        canClose: can_close
+      })
+    } finally {
+      setIsBusy(false)
+    }
   }
 
   const renameTask = (id, newName) => {
@@ -75,15 +108,16 @@ function App(){
     <div>
       <h1>Task Tracker</h1>
 
-      {isLoading ? <LoadingPopup />
-        : loadingError 
-        ? (
-          <ErrorPopup 
-            message={loadingError}
-            onRetry={loadTasks}
-            onClose={null}
-          />
-        ) : (
+      {errorDialog ? (
+        <ErrorPopup 
+          message={errorDialog.message}
+          onRetry={errorDialog.retry}
+          onClose={()=>{setErrorDialog(null)}}
+          showClose={errorDialog.canClose}
+        />
+      ) : isLoading ? (
+        <LoadingPopup />
+      ) : (
           <>
             <AddTaskForm
               name={name}
@@ -92,8 +126,6 @@ function App(){
               setCreatedby={setCreatedby}
               addTask={addTask}
               isBusy={isBusy}
-              error={error}
-              setError={setError}
             />
 
             {tasks.length === 0 ? (
@@ -103,10 +135,10 @@ function App(){
                   tasks={tasks}
                   deleteTask={deleteTask}
                   renameTask={renameTask}
+                  isBusy={isBusy}
                 />
               )
             }
-            
           </>
         )
       }

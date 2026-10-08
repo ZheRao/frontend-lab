@@ -1,10 +1,10 @@
-function ErrorPopup({message, onRetry, onClose}){
+function ErrorPopup({message, onRetry, onClose, showClose}){
     return (
         <div className="overlay">
             <div className="popup">
                 <p>{message}</p>
                 <button onClick={onRetry}>Try again</button>
-                {onClose && (
+                {showClose && (
                     <button onClick={onClose}>Close</button>
                 )}
             </div>
