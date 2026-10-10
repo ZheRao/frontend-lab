@@ -1,15 +1,21 @@
 
 let nextId = 100
+let callCount = 0
 
 export function fakeCreateTask(name, createdby){
+    callCount++
+    const shouldFail = callCount % 2 === 1
     return new Promise ((resolve, reject) => {  
         setTimeout(() => {  
-            resolve({
-                id: nextId,
-                name: `${name}`,
-                created_by: `${createdby}`
-            })
-            // reject(new Error("Fake server add failed"))
+            if (shouldFail) {
+                reject(new Error("Fake server add failed"))
+            } else {
+                resolve({
+                    id: nextId,
+                    name: `${name}`,
+                    created_by: `${createdby}`
+                })
+            }
             nextId = nextId + 1
         }, 2000)
     })
@@ -30,22 +36,32 @@ export function fakeGetTasks(){
 }
 
 export function fakeDeleteTasks(id) {
+    callCount++
+    const shouldFail = callCount % 2 === 1
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            resolve({deleteId: id})
-            // reject(new Error(`unable to delete record ${id} please try again`))
+            if (shouldFail) {
+                reject(new Error(`unable to delete record ${id} please try again`))
+            } else {
+                resolve({deleteId: id})
+            }
         }, 2000)
     })
 }
 
 export function fakeRenameTask(id, newName){
+    callCount++
+    const shouldFail = callCount % 2 === 1
     return new Promise((resolve, reject) => {
         setTimeout(() => {
-            resolve({
-                id: id,
-                name: newName
-            })
-            // reject(new Error(`unable to rename record ${id} to new name ${newName}`))
+            if (shouldFail) {
+                reject(new Error(`unable to rename record ${id} to new name ${newName}`))
+            } else {
+                resolve({
+                    id: id,
+                    name: newName
+                })
+            }
         }, 2000)
     })
 }

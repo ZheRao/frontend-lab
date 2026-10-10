@@ -134,14 +134,7 @@ function App(){
     <div>
       <h1>Task Tracker</h1>
 
-      {errorDialog ? (
-        <ErrorPopup 
-          message={errorDialog.message}
-          onRetry={errorDialog.retry}
-          onClose={()=>{setErrorDialog(null)}}
-          showClose={errorDialog.canClose}
-        />
-      ) : isLoading ? (
+      {isLoading ? (
         <LoadingPopup />
       ) : (
           <>
@@ -168,6 +161,15 @@ function App(){
           </>
         )
       }
+
+      {errorDialog && (
+        <ErrorPopup 
+          message={errorDialog.message}
+          onRetry={errorDialog.retry}
+          onClose={()=>{setErrorDialog(null)}}
+          showClose={errorDialog.canClose}
+        />
+      )}
 
     </div>
   )
