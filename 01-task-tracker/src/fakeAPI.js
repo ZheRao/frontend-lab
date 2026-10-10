@@ -37,3 +37,15 @@ export function fakeDeleteTasks(id) {
         }, 2000)
     })
 }
+
+export function fakeRenameTask(id, newName){
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({
+                id: id,
+                name: newName
+            })
+            // reject(new Error(`unable to rename record ${id} to new name ${newName}`))
+        }, 2000)
+    })
+}

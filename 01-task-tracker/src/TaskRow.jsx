@@ -11,9 +11,12 @@ function TaskRow({task, deleteTask, renameTask, isBusy}){
         setDraftName(task.name)
     }
     // save commits draft and set mode to 'view'
-    const saveEdit = () => {
-        renameTask(task.id, draftName)
-        setMode('view')
+    const saveEdit = async () => {
+        const isSuccess = await renameTask(task.id, draftName)
+        if (isSuccess) {
+            setMode('view')
+        }
+        
     }
 
     return (
@@ -30,11 +33,13 @@ function TaskRow({task, deleteTask, renameTask, isBusy}){
                     <td>
                         <button
                           onClick={saveEdit}
+                          disabled={isBusy}
                         >
-                            Save
+                            {isBusy ? 'Saving...' : 'Save'}
                         </button>
                         <button
                           onClick={()=>(setMode('view'))}
+                          disabled={isBusy}
                         >
                             Cancel
                         </button>
