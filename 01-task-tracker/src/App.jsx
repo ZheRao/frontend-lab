@@ -50,7 +50,7 @@ function App(){
     loadTasks()
   }, [])
 
-  const runWrite = async (action) => {
+  const runWrite = async (action, retryAction) => {
     setIsBusy(true)
     setErrorDialog(null)
     try {
@@ -59,7 +59,7 @@ function App(){
     } catch(err) {
       setErrorDialog({
         message: 'Error !!! ' + err.message,
-        retry: () => runWrite(action),
+        retry: retryAction ?? (() => runWrite(action)),
         canClose: true 
       })
       return false
@@ -114,7 +114,7 @@ function App(){
     }
   }
 
-  const renameTask = async (id, newName) => {
+  const renameTask = async (id, newName, retryAction) => {
     const result = await runWrite(
       async () => {
         await fakeRenameTask(id, newName)
@@ -126,7 +126,7 @@ function App(){
           )
         )
       }
-    )
+    , retryAction)
     return result
   }
   
