@@ -13,6 +13,7 @@ function TaskRow({task, deleteTask, renameTask, isBusy}){
     // save commits draft and set mode to 'view'
     const saveEdit = async () => {
         const isSuccess = await renameTask(task.id, draftName)
+        // retry misses this set 'mode' to 'view' step
         if (isSuccess) {
             setMode('view')
         }

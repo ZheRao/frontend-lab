@@ -50,6 +50,25 @@ function App(){
     loadTasks()
   }, [])
 
+  const runWrite = async (action) => {
+    setIsBusy(true)
+    setErrorDialog(null)
+    try {
+      const result = await action()
+      return true
+    } catch(err) {
+      setErrorDialog({
+        message: 'Error !!! ' + err.message,
+        retry: () => runWrite(action),
+        canClose: true 
+      })
+      return false
+    } finally {
+      setIsBusy(false)
+      // don't 'return' here, 'finally' can override an ealier 'return' or even suppress an exception
+    }
+  }
+
   const addTask = async () => {
     setIsBusy(true)
     setErrorDialog(null)
@@ -96,33 +115,19 @@ function App(){
   }
 
   const renameTask = async (id, newName) => {
-    setIsBusy(true)
-    setErrorDialog(null)
-    try {
-      const response = await fakeRenameTask(id, newName)
-      setTasks(current => 
-        current.map((task) => 
-          task.id === id 
-            ? {...task, name: newName}
-            : task
+    const result = await runWrite(
+      async () => {
+        await fakeRenameTask(id, newName)
+        setTasks(current => 
+          current.map((task) => 
+            task.id === id 
+              ? {...task, name: newName}
+              : task
+          )
         )
-        
-      )
-      return true // communicate success 
-    } catch(err) {
-      const error_message = 'Error!!! ' + err.message
-      const retry_action = () => renameTask(id, newName)
-      const can_close = true
-      setErrorDialog({
-        message: error_message,
-        retry: retry_action,
-        canClose: can_close
-      })
-      return false // communicate failure
-    } finally {
-        setIsBusy(false)
-        // don't 'return' here, 'finally' can override an ealier 'return' or even suppress an exception
-    }
+      }
+    )
+    return result
   }
   
   return (
