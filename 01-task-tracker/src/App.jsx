@@ -70,48 +70,27 @@ function App(){
   }
 
   const addTask = async () => {
-    setIsBusy(true)
-    setErrorDialog(null)
-    try {
-      const createdTask = await fakeCreateTask(name,createdby)
-      setTasks(current => [...current, createdTask])
-      setName('')
-      setCreatedby('')
-    } catch (err) {
-      const error_message = 'Error!!!! ' + err.message
-      const retry_action = () => addTask()
-      const can_close = true
-      setErrorDialog({
-        message: error_message,
-        retry: retry_action,
-        canClose: can_close
-      })
-    } finally {   // always re-enable the buttons
-      setIsBusy(false)
-    }
-    
+    const result = await runWrite(
+      async () => {
+        const createdTask = await fakeCreateTask(name, createdby)
+        setTasks(
+          (current) => [...current, createdTask]
+        )
+        setName('')
+        setCreatedby('')
+      }, null)
+      return result
   }
 
   const deleteTask = async (id) => {
-    setIsBusy(true)
-    setErrorDialog(null)
-    try {
-      const response = await fakeDeleteTasks(id)
-      setTasks(current => 
-        current.filter((task) => (task.id!==id))
-      )
-    } catch(err) {
-      const error_message = 'Error!!!! ' + err.message
-      const retry_action = () => deleteTask(id)
-      const can_close = true
-      setErrorDialog({
-        message: error_message,
-        retry: retry_action,
-        canClose: can_close
-      })
-    } finally {
-      setIsBusy(false)
-    }
+    const result = await runWrite(
+      async () => {
+        await fakeDeleteTasks(id)
+        setTasks( (current) =>
+          current.filter((task) => (task.id!==id))
+        )
+      }, null)
+      return result
   }
 
   const renameTask = async (id, newName, retryAction) => {
