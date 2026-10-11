@@ -1,5 +1,5 @@
 import './App.css'
-import {useState, useEffect} from 'react'
+import {useState, useEffect, useRef} from 'react'
 
 import TaskList from './TaskList.jsx'
 import AddTaskForm from './addTaskForm.jsx'
@@ -23,6 +23,8 @@ function App(){
   const [isLoading, setIsLoading] = useState(true)
 
   const [tasks, setTasks] = useState([])
+
+  const busyRef = useRef(false)
 
   // initial load
   const loadTasks = async () => {
@@ -51,8 +53,15 @@ function App(){
   }, [])
 
   const runWrite = async (action, retryAction) => {
+    // guard against user submit request twice before UI re-render to reflect `isBusy` state
+    if (busyRef.current) {
+      return false // note, this makes 'return false' in 'catch' ambiguous, but not deliberately engineered around
+    }
+
+    busyRef.current = true
     setIsBusy(true)
     setErrorDialog(null)
+
     try {
       const result = await action()
       return true
@@ -64,6 +73,7 @@ function App(){
       })
       return false
     } finally {
+      busyRef.current = false
       setIsBusy(false)
       // don't 'return' here, 'finally' can override an ealier 'return' or even suppress an exception
     }
