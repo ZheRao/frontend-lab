@@ -1,166 +1,192 @@
-# Frontend & Full-Stack Learning Experiments — Roadmap
+# Strata Client CRUD — Learning Experiments Roadmap
 
-**Created:** 2026-10-11  
-**Status:** Learning plan; experiments are independently scoped and may be adjusted as knowledge gaps become clearer.  
-**Primary reference:** `01-client-crud.md` — Client CRUD Feature Specification and Acceptance Tests (v0.5, 2026-10-11).
+**Originally created:** 2026-10-11  
+**Updated:** 2026-10-12  
+**Status:** Living learning and implementation roadmap; refine each lab when it begins.  
+**Authoritative feature reference:** `01-client-crud.md` — **Client CRUD — Feature Specification and Acceptance Tests, v0.6 (2026-10-12)**. If the repository contains an older copy, replace or clearly distinguish it. The feature specification, not this roadmap, governs production behavior.
 
-## 1. Purpose and philosophy
+## 1. Mission and operating philosophy
 
-These experiments exist to **close specific knowledge gaps before implementing the production-intended Client CRUD feature**. They are **not** exercises in engineering complete production applications, and they do **not** each need a full development SOP, a new exhaustive behavioral specification, deployment infrastructure, or polished visual design.
+Learn the frontend/full-stack mechanisms needed to deliver **Strata's real Client CRUD feature**, while minimizing duplicate implementation work.
 
-Use the already-agreed Client CRUD invariants and behavior as reference where applicable. Translate them into small, fictional domains to understand the underlying mechanisms. Do not reproduce the entire Client CRUD feature in every experiment.
+**Updated method: production-intended feature components, experimental dependencies.** Instead of implementing unrelated fictional apps and later translating them into Strata, use **Client Management** as the shared subject of the labs. Build focused, potentially reusable components and service boundaries, but substitute in-memory records, fake endpoints, controlled responses, or a small local database while studying each mechanism. Replace these dependencies deliberately when integrating into Strata.
 
-**Learning loop:** identify the target mechanism → model or reason about it → implement the smallest useful example → deliberately test success/failure/edge cases → record key lessons → stop.
+Each lab exists to answer **one bounded engineering question**. It is **not** a separate attempt to complete production Client CRUD or the whole Strata platform. Do not apply the full feature-development SOP to every educational lab: the production feature already has a behavioral specification. For each lab, identify the mechanism, model only what is needed, implement incrementally, test relevant edge cases, document what was learned, and stop.
 
-**Repository convention:** one Git repository containing independently runnable experiment directories. Keep `01-task-tracker` as a historical learning snapshot. Do not introduce shared application architecture or monorepo tooling without a concrete need. Each experiment may have its own dependencies and README.
+**Two complementary rules:**
 
-## 2. Experiment overview
+1. **Design for reuse, not assumed production readiness.** Passing an experiment does not certify integration, accessibility, reliability, or production behavior. Review against the latest feature specification and tests before adoption.
+2. **Keep experimental infrastructure outside reusable code.** UI components should depend on explicit props/contracts or a thin service boundary, not directly import lab-only fake services. Production and fake implementations should be swappable without rewriting the component's interaction model.
 
-| Experiment | Central engineering question | Primary learning outcome |
-| --- | --- | --- |
-| `02-ui-state-lab` | How do interacting UI states coexist without contradictions? | State dimensions, ownership, transitions, modal layering, draft preservation and focus isolation |
-| `03-async-request-lab` | How can a UI coordinate a request whose completion is delayed or uncertain? | Promise lifecycle, duplicate-submission guards, timeouts, local abandonment and stale-response protection |
-| `04-http-contract-lab` | How does the frontend reliably interpret backend outcomes? | `fetch`, status handling, structured error codes, safe retry decisions and unknown-outcome classification |
-| `05-database-integrity-lab` | Which invariants must the database enforce independently of the UI? | Normalized uniqueness, foreign keys, transaction atomicity and rollback |
-| `06-behavior-testing-lab` | How can tests prove that intended behavior survives changes? | User-oriented React tests, controlled async tests, backend tests and selected integration tests |
+**Learning style:** Work incrementally; reason through states, event flow, React ownership and JavaScript behavior before introducing abstractions. Prefer small code changes and deliberate experiments over large generated implementations. Understand the mechanisms being adopted.
 
-## 3. `02-ui-state-lab` — Meeting Room Reservation Manager
+## 2. Current feature decisions that all labs must respect
 
-**Purpose:** Understand UI state modeling and coordination without network or database complexity.
+Version 0.6 replaces inline Rename with **modal Edit Client**. The table is the default view; **Add**, **Edit**, and **Delete confirmation** are mutually exclusive blocking action contexts. No background action switching is permitted while a modal is open.
 
-**Tiny project:** A fictional meeting-room reservation list with a New Reservation modal, inline Rename, and simulated pending/error overlays. Reservation data lives in React state; use fixed sample records. The domain is illustrative, not a real booking system.
+- **G-04 / G-12 — Modal exclusivity and focus:** only the topmost dialog is interactive; underlying table controls, keyboard activation and focus are blocked. Native HTML `<dialog>` with `showModal()` is a candidate mechanism, with React/DOM synchronization, focus restoration and stacked-dialog behavior verified explicitly.
+- **G-11 — Entity-level draft isolation:** Add initializes a fresh object-shaped draft such as `{ client_name: "" }`; Edit initializes a new draft from the selected fetched client's editable attributes. Neither changes authoritative fetched records. The immutable `client_id` is held separately as the mutation target. Cancel discards; error dismissal preserves; confirmed success discards.
+- **G-05 — One pending mutation:** block duplicate submissions and other interactions while an operation is unresolved.
+- **G-06 — Confirmed success:** reset feature-level drafts, search and dialogs; refetch authoritative clients; preserve the root-owned self-declared username. Full readiness requires successful refresh.
+- **G-07 / G-08 — Error semantics:** confirmed rejection can preserve recoverable drafts; only explicitly allowlisted, confirmed-non-commit errors can offer mutation Retry. An unknown commit outcome must not be blindly retried.
+- **G-01–G-03 / G-09 — Backend integrity:** immutable numeric ID, whitespace-only invalid names, database-enforced normalized-name uniqueness, and restrictive referential integrity.
 
-**Practice:**
-- Separate mutually exclusive editing contexts from independent overlay/request-status dimensions.
-- Identify legal transitions and prevent impossible UI combinations.
-- Decide state ownership between parent and child components; practice props, callbacks, mounting/unmounting and draft initialization.
-- Preserve a draft when a validation/error dialog is dismissed; discard it on explicit cancellation or a permitted context switch.
-- Keep one editing/action context active; prevent background interaction while a modal is topmost.
-- Manage focus on modal opening, closing and restoration; preserve ordinary keyboard accessibility without custom shortcuts.
-- Use a simple simulated pending state to understand visual blocking; leave real asynchronous lifecycle mechanics for Experiment 03.
+**Scope reminder:** the identity gate is temporary attribution, not authentication. Custom Enter/Escape shortcuts are not required, but ordinary keyboard accessibility and modal focus containment are. Timeout and late-response handling belong primarily to Lab 03; actual HTTP classification to Lab 04; persistence constraints to Lab 05.
 
-**Relevant Client CRUD rules:** G-04 (UI exclusivity), G-06 (success reset), G-07 (draft preservation after confirmed rejection), G-11 (modal focus); basic G-05 behavior may be simulated. Relevant acceptance scenarios include Add/Rename context switching, validation errors, cancellation, and modal isolation.
+## 3. Experiment map
 
-**Done when:** You can explain the state model and component ownership, demonstrate switching editing contexts, preserve/discard drafts correctly, and show that only the topmost modal is interactive. No backend required.
+| Lab | Focused engineering question | Reusable target / outcome | Experimental substitute |
+| --- | --- | --- | --- |
+| `01-task-tracker` (complete) | How do React state, props, callbacks and basic async UI work? | Historical learning reference | Independent Task Tracker; do not retrofit |
+| `02-ui-state-lab` | How do Client CRUD action contexts, drafts and modal layers coordinate? | Client table and action dialogs; workflow/state ownership | Local sample clients and controlled UI outcomes |
+| `03-async-request-lab` | How do client mutations behave while delayed, failed, timed out or abandoned? | Async coordination, submission guards and stale-response handling | Fake client service with controllable promises |
+| `04-http-contract-lab` | How can the frontend reliably interpret backend mutation outcomes? | API adapter and explicit response/error contracts | Minimal FastAPI endpoints, initially controlled responses |
+| `05-database-integrity-lab` | Which client invariants must survive bypassing the UI? | Tested schema/constraint and data-access patterns | Small SQLite client + dependent-record schema |
+| `06-behavior-testing-lab` | How can tests protect Client CRUD behavior through integration? | Reusable UI/API/database tests | Mocks, fake timers, local test fixtures |
 
-**Not in scope:** Actual room availability, scheduling conflicts, authentication, HTTP, databases, production styling, or the full ten-second timeout protocol.
+These labs are **mechanism-focused stages of one feature**, not five independent, feature-complete Client CRUD applications.
 
-## 4. `03-async-request-lab` — Simulated Submission Console
+## 4. `02-ui-state-lab` — Client Management UI
 
-**Purpose:** Understand a request lifecycle independently of transport details and real server behavior.
+**Question:** How should Client CRUD state, drafts, action contexts and dialogs be represented and coordinated?
 
-**Tiny project:** A console with one Submit action and a configurable fake asynchronous operation that succeeds, rejects, resolves late, or remains unresolved.
-
-**Practice:**
-- Promises, `async`/`await`, `try/catch/finally` and rendering pending state.
-- Difference between `useState` (rendering) and `useRef` (synchronous coordination), including duplicate-submit prevention.
-- Observe one request for ten seconds, then offer **Keep Waiting** or **Stop Waiting & Refresh**.
-- Keep Waiting must observe the original operation, never start a second mutation.
-- Stop Waiting abandons local observation; it does **not** imply server rollback.
-- Track request identity or generation so a late completion cannot overwrite a newer view.
-- Distinguish confirmed resolution from an unresolved/unknown outcome.
-
-**Relevant Client CRUD rules:** G-05, G-08, and the ten-second policy in §8; AT-23 and AT-27–AT-32.
-
-**Done when:** Repeated submissions trigger one operation, the timeout choices behave correctly, and abandoned late responses cannot corrupt the current UI.
-
-**Not in scope:** Real FastAPI, network protocol details, durable idempotency, server-side cancellation or transaction rollback.
-
-## 5. `04-http-contract-lab` — API Response Inspector
-
-**Purpose:** Learn how a frontend and backend communicate outcomes through explicit, machine-readable contracts.
-
-**Tiny project:** A minimal React interface talking to a small FastAPI service with deliberately controlled responses.
+**Build:** A minimal Client Management interface with sample client records, list/search, **Add Client modal**, **Edit Client modal**, **Delete confirmation**, and simulated pending/error layers. The same names, props and components may be adopted in Strata after review. No real backend or database is required.
 
 **Practice:**
-- `fetch`, HTTP methods and statuses, JSON request/response bodies, and the distinction between an HTTP error response and a rejected `fetch` promise.
-- Handle malformed/unexpected responses conservatively.
-- Define stable error codes and explicit non-commit semantics in FastAPI.
-- Distinguish success, validation rejection, duplicate-name rejection, allowlisted confirmed-safe transient failures, and unknown outcomes.
-- Offer Retry only when the backend contract authoritatively establishes that the mutation did not commit and its error code is allowlisted.
-- Preserve the draft on confirmed rejection; never infer retry safety from human-readable messages alone.
+- Model a single active action context: view / add / edit(target client ID) / delete(target client ID). Avoid redundant booleans that permit contradictory contexts.
+- Represent Add/Edit as separate **object-shaped drafts**, initialized on modal entry and isolated from fetched records. Cancel discards; confirmed error dismissal preserves.
+- Keep workflow, draft, pending and error-overlay responsibilities distinct. A completed failure is no longer pending.
+- Coordinate parent-owned workflow with child components through props and callbacks; understand `useState`, `useRef`, conditional rendering, mount/unmount and state lifetime.
+- Implement native modal interaction (`<dialog>` / `showModal()` where suitable), keyboard/focus containment, sensible focus restoration and stacked error overlays.
+- Simulate only enough pending/error behavior to verify layering and transitions. Defer real promise races, timeouts and transport to later labs.
 
-**Relevant Client CRUD rules:** G-07, G-08, §8 error classes, and §11 safe-retry decisions.
+**Relevant spec:** G-04–G-07, G-11–G-12; AT-05–AT-07, AT-11–AT-15, AT-18–AT-19, AT-22, AT-24, AT-33 and AT-39. The UI should not silently change the approved behavior.
 
-**Done when:** The UI chooses appropriate recovery actions from the response contract, not from error-message wording, and treats ambiguous outcomes as unknown rather than safe-to-retry.
+**Done when:** Add/Edit/Delete contexts are exclusive; entity drafts initialize, preserve and discard correctly; fetched records do not change during editing; the topmost dialog isolates interaction; component ownership and state transitions can be explained.
 
-**Not in scope:** A complete CRUD backend, authentication, database persistence, deployment, or solving distributed exactly-once execution.
+**Out of scope:** real HTTP, database integrity, authenticated identity, production styling, full timeout protocol, exhaustive testing. Keep the interface minimal; table columns remain subject to the production spec's open decisions.
 
-## 6. `05-database-integrity-lab` — Client & Dependent Records
+## 5. `03-async-request-lab` — Client Mutation Lifecycle
 
-**Purpose:** Understand the integrity guarantees that must exist even if frontend validation is bypassed.
+**Question:** How can the Client CRUD UI safely coordinate one asynchronous mutation when responses are delayed or uncertain?
 
-**Tiny project:** A small SQLite database with a `client` table and a second table referencing clients.
+**Build:** Exercise Add/Edit/Delete operations through a **fake client service** with controllable success, confirmed rejection, delay, unresolved operations and late completion. Reuse the relevant Lab 02 UI/contracts rather than rebuild the full table.
 
-**Practice:**
-- Primary keys and stable identity independent of editable display names.
-- Derive a normalized comparison key: trim outer whitespace, collapse consecutive whitespace into one underscore, and lowercase; preserve the display name separately.
-- Enforce `UNIQUE` on the normalized key for both INSERT and UPDATE.
-- Enforce restrictive foreign keys; explicitly enable and verify SQLite foreign-key enforcement.
-- Practice INSERT, UPDATE, DELETE, transactions, failure handling and rollback.
-- Explore why a pre-insert frontend/backend existence check cannot replace database uniqueness.
+**Practice:** `Promise`, `async`/`await`, `try/catch/finally`; rendering pending state versus synchronous `useRef` duplicate-submission guards; preserving submitted payload/context; a ten-second **Keep Waiting** vs **Stop Waiting & Refresh** decision; continuing to observe the same original request; local abandonment without promising backend rollback; request identity/generation guards so late responses do not overwrite newer UI state. Differentiate confirmed rejection from unknown outcome.
 
-**Relevant Client CRUD rules:** G-01–G-03, G-09; AT-34–AT-36; backend requirements in §10. Precise Unicode normalization edge behavior remains an implementation detail to decide consistently.
+**Relevant spec:** G-05–G-08; §8 ten-second policy; AT-23, AT-27–AT-32.
 
-**Done when:** Duplicate normalized names fail on create and rename, referenced clients cannot be deleted, and failed transactions do not leave partial changes.
+**Done when:** Rapid submissions produce one mutation; timeout decisions never create duplicate mutations; late abandoned responses cannot reset newer UI state; success, confirmed failure and unknown outcome remain distinguishable.
 
-**Not in scope:** Full production schema, comprehensive audit system, authentication, or large-scale database performance tuning.
+**Out of scope:** real HTTP response semantics, server-side cancellation, durable idempotency and actual rollback of an in-flight server mutation.
 
-## 7. `06-behavior-testing-lab` — Regression Test Workshop
+## 6. `04-http-contract-lab` — Client API Boundary
 
-**Purpose:** Learn to test user-observable behavior and integrity guarantees rather than implementation details.
+**Question:** How should React and FastAPI communicate authoritative outcomes without unsafe retry assumptions?
 
-**Tiny project:** Primarily **add tests to selected earlier experiments**, rather than building another large application. Use a small standalone fixture only if a concept cannot be isolated otherwise.
+**Build:** A minimal FastAPI service and a frontend client API adapter using `fetch`. Start with controlled endpoints/responses; connect to the existing Client CRUD operation boundary, not a newly invented frontend.
 
-**Practice:**
-- Vitest and React Testing Library for interactions, forms, modal isolation and draft lifecycle.
-- Controlled fake timers and mocked/deferred promises for pending, timeout and late-response cases.
-- Assert request counts to catch duplicate submissions.
-- Backend tests for FastAPI response contracts and error classification.
-- Database tests for uniqueness, restrictive deletion and transaction rollback.
-- A few integration tests connecting UI, API and database, when useful to expose boundary mistakes.
+**Practice:** HTTP methods/statuses, JSON payloads, network failures versus HTTP error responses, malformed responses, stable machine-readable error codes, explicit confirmed-non-commit semantics, allowlisted safe retry, non-retryable duplicate/validation errors and conservative unknown-outcome handling. Ensure UI error messages do not determine retry safety.
 
-**Relevant Client CRUD rules:** Select representative cases from §9, especially AT-06–AT-07, AT-12–AT-15, AT-23–AT-32, and AT-34–AT-36.
+**Relevant spec:** G-07–G-08, §8 error classes, §10 backend error-contract requirements, §11 safe-retry decision.
 
-**Done when:** Tests reliably fail for deliberately introduced regressions in draft preservation, duplicate submission, timeout/late response handling, response classification and database constraints.
+**Done when:** The adapter distinguishes success, confirmed non-retryable rejection, confirmed-safe retryable rejection and unknown outcome, and the UI chooses the appropriate action without parsing human-readable message text.
 
-**Not in scope:** Exhaustive end-to-end coverage, production CI/CD infrastructure, broad test-framework mastery or testing every feature in the full Strata platform.
+**Out of scope:** full production API, authentication, deployment and guarantees of exactly-once distributed execution.
 
-## 8. Suggested order and boundaries
+## 7. `05-database-integrity-lab` — Client and Dependent Records
 
-1. **02 — UI state:** Learn how to represent and coordinate what the user sees.
-2. **03 — Async lifecycle:** Add uncertainty in time, without real HTTP.
-3. **04 — HTTP contracts:** Replace fake outcomes with explicit frontend/backend communication.
-4. **05 — Database integrity:** Enforce correctness below the API layer.
-5. **06 — Behavioral testing:** Consolidate and automate representative behavior from earlier experiments.
+**Question:** Which invariants must the database enforce regardless of frontend behavior?
 
-This order is a learning scaffold, not a strict dependency graph. Testing can begin earlier where convenient. Do not add Redux, Zustand, TanStack Query, state-machine libraries, complex monorepo tooling, or production deployment just to complete these labs.
+**Build:** Small SQLite schema with a client table and at least one referencing dependent table. Reuse the real Client CRUD identity and naming semantics; production adoption depends on the eventual database technology and migration conventions.
 
-## 9. Completion discipline
+**Practice:** Immutable numeric `client_id`; display name versus standardized uniqueness key; trim surrounding whitespace, collapse whitespace runs to `_`, lowercase; UNIQUE on INSERT and UPDATE; restrictive foreign keys with SQLite FK enforcement enabled; transactions and rollback; why application-side prechecks do not prevent races; clear API mapping of constraint errors.
 
-For each experiment, keep a short README covering: **question explored; minimal implementation; key mechanisms understood; failure cases observed; remaining uncertainties**. Preserve the working code as a reference, then move on when the specific learning outcome is achieved. Avoid polishing, extending the business domain, or repeating the complete feature-development SOP.
+**Relevant spec:** G-01–G-03, G-09; AT-34–AT-36; §10. Unicode edge semantics and exact dependent tables remain implementation decisions.
 
-**Handoff to Strata:** After the relevant gaps are closed, implement the real Client CRUD against its own authoritative specification and acceptance tests. The experiments teach mechanisms; they do not replace production feature decisions or verification.
+**Done when:** Equivalent normalized names cannot coexist, conflicting Edit is rejected, referenced Delete is blocked and failed transactions leave no partial changes.
+
+**Out of scope:** complete Strata database, audit implementation, production migrations and broad performance engineering.
+
+## 8. `06-behavior-testing-lab` — Regression Protection
+
+**Question:** How do we prove that Client CRUD's intended user-visible behavior survives code changes and integration?
+
+**Build:** Add tests primarily to code from the earlier labs; do **not** create another full Client CRUD app. Use Vitest and React Testing Library for frontend behavior, FastAPI tests for contracts, and database tests for integrity; add selected integration tests where valuable.
+
+**Practice:** User-level assertions for modal isolation, fresh/retained/discarded drafts, immutable IDs, request counts, confirmed errors, success reset and preserved username; fake timers/deferred promises for ten-second policy and stale responses; backend contract and constraint tests. Prefer behavioral assertions over tests coupled to internal component state.
+
+**Relevant spec:** Representative §9 acceptance tests, particularly AT-06–AT-07, AT-12–AT-15, AT-23–AT-32, AT-34–AT-36, AT-39–AT-40.
+
+**Done when:** Deliberately introduced regressions in the key workflows and boundaries cause reliable test failures.
+
+**Out of scope:** exhaustive E2E coverage, full production CI/CD and tests for unrelated Strata features.
+
+## 9. Repository and reuse strategy
+
+A straightforward starting layout:
+
+```text
+frontend-experiments/
+├── EXPERIMENT_ROADMAP.md
+├── 01-task-tracker/           # Completed historical project
+├── 02-ui-state-lab/          # Client CRUD UI components + local fixtures
+├── 03-async-request-lab/     # Async mechanisms / fake service
+├── 04-http-contract-lab/    # HTTP adapter + minimal FastAPI
+├── 05-database-integrity-lab/# SQLite integrity exercises
+└── 06-behavior-testing-lab/  # Tests and/or pointers to tests in prior labs
+```
+
+**Avoid five diverging frontend copies.** Later labs should either (a) import/exercise earlier components where simple, (b) extend the same working implementation through a deliberate integration step, or (c) isolate a narrow mechanism and transfer it after validation. Choose based on the actual dependency/tooling cost **when reaching that lab**. Separate directories do not require separately duplicated apps. Do not introduce a monorepo framework, shared package, Redux, Zustand, TanStack Query or a state-machine library without a demonstrated need.
+
+**Boundary example:** `AddClientModal` accepts a draft and callbacks/props appropriate to its UI responsibility; the coordinating layer calls a `clientService.createClient(...)` contract. In Lab 03 the service is fake; in production the implementation uses the real API. Do not hardwire `fakeCreateClient` inside reusable UI. Decide exact state ownership during Lab 02; avoid freezing an API prematurely.
+
+## 10. Integration into Strata: verification gate
+
+A lab's code is a **candidate reusable artifact**, not automatically production-ready. Before adoption:
+
+1. Check against the **latest** Client CRUD specification, invariants and acceptance tests; resolve relevant open decisions.
+2. Confirm component props, state ownership, modal accessibility and draft lifecycle in the actual Strata application.
+3. Replace fake services/fixtures with the correct API/data adapters without leaking experimental dependencies into production code.
+4. Verify request lifecycle, error codes, duplicate guards, unknown outcomes, post-success refetch and stale-response protection at the appropriate layers.
+5. Test database constraints, audit attribution and integration behavior as applicable; review code independently and record material decisions.
+
+**Production readiness belongs to the integrated feature**, not to any individual lab.
+
+## 11. Execution discipline and handoff instructions for a new chat
+
+**When starting a new lab or conversation:**
+
+1. Read **this roadmap** and the latest **Client CRUD feature specification** (v0.6 as of 2026-10-12). If the spec isn't provided, ask for it rather than inventing missing invariants.
+2. Confirm which lab is active and what was already implemented. Do not assume later labs are complete or that older examples (meeting-room reservations, inline Rename) are still current.
+3. Refine **only that lab's README, boundaries, state model and immediate tasks**. Do not prematurely specify all future labs; this roadmap is directional and deliberately revisable.
+4. Coach step-by-step: let the developer propose state transitions and component responsibilities, review them, then implement in small increments. Explain syntax, React mechanics and data/control flow as needed; avoid generating a whole app at once unless requested.
+5. Use Client CRUD naming and contracts, with fake data/services for mechanisms outside the lab's scope. Aim for production reuse without claiming production readiness.
+6. At completion, capture: question answered, mechanism learned, artifacts suitable for reuse, verification performed, remaining limitations and next integration step. Stop rather than expanding indefinitely.
+
+**Current starting point (2026-10-12):** `01-task-tracker` is complete. `02-ui-state-lab` is the next active lab. State modeling has established the value of separate action context, request status, draft and error layers. The **new** feature design uses blocking **Add/Edit/Delete dialogs**, not inline Rename; the next step is to revise the Lab 02 README/state model and begin a small Client Management UI implementation using local records. Labs 03–06 remain future work and should be refined individually.
+
+**North star:** Learn deeply enough to own and review the code, while shipping Strata's Client CRUD with minimal redundant effort and explicit production verification.
 
 # Appendix: Client CRUD — Feature Specification and Acceptance Tests
 
 **Project:** Management Configuration  
 **Feature:** Client reference-data management  
-**Version:** 0.5 (identity lifecycle and normalization confirmed)  
-**Date:** 2026-10-11  
-**Status:** Proposed specification; decisions recorded below, remaining questions explicitly identified  
+**Version:** 0.6 (modal Edit Client and entity-level drafts)  
+**Date:** 2026-10-12  
+**Status:** Approved interaction model; remaining implementation details explicitly identified  
 **Scope:** One bounded feature. Not a specification for the entire platform.
 
 ## 1. Purpose and boundaries
 
-Provide a simple management workflow where a user enters a temporary self-declared name, views and searches clients, and creates, renames, or deletes client records. The feature prioritizes predictable behavior, data integrity, and understandable error recovery over advanced optimization.
+Provide a simple management workflow where a user enters a temporary self-declared name, views and searches clients, and creates, edits, or deletes client records. The feature prioritizes predictable behavior, data integrity, and understandable error recovery over advanced optimization.
 
 ### In scope
 
 - Temporary session identity gate (name entry).
 - Initial retrieval and display of clients in a table.
 - Client-name search/filtering.
-- Add Client modal, inline Rename, Delete confirmation modal.
+- Add Client modal, Edit Client modal, Delete confirmation modal.
 - Blocking pending overlay, error dialogs, and long-request decision dialog.
 - Single active editing context and single pending mutation per UI session.
 - Database-backed uniqueness and referential integrity.
@@ -181,9 +207,9 @@ Provide a simple management workflow where a user enters a temporary self-declar
 
 - **Session identity:** User-entered attribution name. Not authenticated.
 - **Management workflow:** Client-management UI after the identity gate; distinct from session identity.
-- **Draft:** Unsaved client name in Add or Rename.
-- **Active editing context:** Exactly one Add modal or one inline Rename editor, or none. Delete confirmation is a modal action context.
-- **Mutation:** Create, Rename, or Delete request to backend.
+- **Client draft:** A separate object holding editable client attributes for Add or Edit; in v1 it contains only `client_name`. It is not the authoritative fetched record.
+- **Active action context:** At most one Add modal, Edit modal, or Delete confirmation modal is active; otherwise the table is in its default viewing context.
+- **Mutation:** Create, Update (Edit), or Delete request to backend.
 - **Confirmed success:** Backend response authoritatively indicates mutation committed.
 - **Confirmed rejection:** Backend response establishes that mutation was not committed.
 - **Unknown outcome:** No authoritative confirmation whether mutation committed (e.g., lost response or timeout).
@@ -192,19 +218,19 @@ Provide a simple management workflow where a user enters a temporary self-declar
 
 ## 3. Global invariants and contracts
 
-**G-01 — Stable client identity.** Each client has an immutable numeric primary key (`client_id`). Renaming changes the display name, not the ID.
+**G-01 — Stable client identity.** Each client has an immutable numeric primary key (`client_id`). Editing changes allowed attributes, not the ID.
 
 **G-02 — Name validity.** A client name is invalid only when it is empty or consists entirely of whitespace. A name with at least one non-whitespace character is syntactically valid. Duplicate-name rules are separate database-integrity rules. No other character restrictions are currently specified.
 
 **G-03 — Uniqueness.** The database enforces uniqueness on a consistently derived normalized name key, on both INSERT and UPDATE. The confirmed normalization policy is to trim leading/trailing whitespace, replace each consecutive whitespace run with one underscore, and lowercase for comparison, while preserving the human-readable `client_name`. The key is a lookup/uniqueness key, not a second immutable identity.
 
-**G-04 — UI exclusivity.** At most one editing/action context is active in a single management UI. Switching from an unsaved inline Rename to another available action discards the Rename draft. Modal overlays block background mouse and keyboard interactions.
+**G-04 — UI exclusivity.** At most one Add, Edit, or Delete action modal is active in a management UI. Opening one makes the underlying table and other actions inert until that modal closes. No inline editing or background action switching occurs in v1.
 
 **G-05 — Mutation exclusivity.** At most one mutation request is initiated and tracked as pending in one UI session. Pending controls are disabled; duplicate click/Enter submissions cannot initiate another request. A synchronous submission guard in addition to render-state disabling may be used.
 
 **G-06 — Success reset.** Following confirmed mutation success, discard all feature-level drafts, filters, and dialogs, refetch clients, and return to the default table view. Preserve the session identity. Do not report full readiness until the refresh succeeds.
 
-**G-07 — Failure preserves recoverable work.** A confirmed server rejection returns the user to the underlying Add or Rename context with its draft preserved after the error dialog is dismissed, except that an explicit Cancel of that editing context discards the draft.
+**G-07 — Failure preserves recoverable work.** A confirmed server rejection returns the user to the underlying Add or Edit modal with its draft preserved after the error dialog is dismissed, except that an explicit Cancel of that editing context discards the draft.
 
 **G-08 — Unknown outcomes are not failures.** Do not automatically retry a mutation when commit status is unknown. Show an uncertainty/reconciliation message and offer a fresh read. Refreshing does not guarantee that an in-flight backend operation cannot commit later.
 
@@ -212,7 +238,9 @@ Provide a simple management workflow where a user enters a temporary self-declar
 
 **G-10 — Cross-session behavior.** The initial release accepts last-write-wins updates across different sessions. Database transaction locks may still serialize writes; they do not imply lost-update prevention. Audit history is for traceability, not verified proof of human identity.
 
-**G-11 — Modal focus.** Only the topmost modal is interactive; background pointer actions, form submission, keyboard shortcuts, and focus movement must not activate underlying controls. Focus should return to a sensible surviving control on dismissal.
+**G-11 — Draft isolation.** Add and Edit each initialize an independent object-shaped draft containing only editable attributes (`client_name` in v1). Typing changes the draft, not the fetched client record. Cancel discards the draft; dismissing an error retains it; confirmed success discards it during the global reset. `client_id` is never editable.
+
+**G-12 — Modal focus.** Only the topmost modal is interactive; background pointer actions, form submission, keyboard shortcuts, and focus movement must not activate underlying controls. Focus should return to a sensible surviving control on dismissal.
 
 ## 4. User entry and default management view
 
@@ -220,11 +248,11 @@ Provide a simple management workflow where a user enters a temporary self-declar
 2. Once a name is accepted, preserve it for the management session as an attribution label.
 3. Fetch the client list from the backend.
 4. Show the client table, a client-name search input, and **Add New Client** at top right.
-5. Each row has an **Action** column with **Rename** and **Delete** controls. Remaining table columns are TBD.
+5. Each row has an **Action** column with **Edit** and **Delete** controls. Remaining table columns are TBD.
 6. Search filters the visible list as the user types. Initial implementation may filter the fetched list locally; exact matching behavior and data-volume assumptions should be recorded during implementation.
 7. During initial loading and refresh, display an appropriate loading state; a failed list fetch displays a read/refresh error, never an empty list falsely presented as successful.
 
-**Default management state:** Search empty; no edit mode; no active modal; no draft; current fetched list displayed; actions enabled.
+**Default management state:** Search empty; no active modal; no draft; current fetched list displayed; actions enabled.
 
 **Identity boundary:** A successful CRUD mutation resets the management workflow, **not** the identity gate. Re-authentication is not required after each mutation.
 
@@ -235,13 +263,13 @@ Provide a simple management workflow where a user enters a temporary self-declar
 - Identity gate completed and management interface available.
 - No mutation currently pending and no blocking modal active.
 - Add is allowed with or without an active search filter.
-- If an inline Rename is active, clicking Add first discards that Rename draft.
+- No other action modal is open. An active Edit modal must be cancelled before Add can be opened.
 
 ### Interaction sequence
 
 1. Click **Add New Client**.
 2. Show an **Add New Client** modal above the table with a name input and **Add/Submit** and **Cancel** controls. Background is inert.
-3. Begin with an empty draft. If this modal was previously cancelled, the prior draft is **not** restored.
+3. Begin with a new draft object containing an empty `client_name`. If this modal was previously cancelled, the prior draft is **not** restored.
 4. User enters a name and clicks Add/Submit. The Enter-key behavior is not yet finalized (see §11); if supported, it must share the same submission guard.
 5. Validate before issuing any network request. For an empty/whitespace-only name, show a non-retryable validation error popup with **Close** only; no mutation request is sent. Closing the error restores the Add modal (the user may correct the draft).
 6. For valid input, submit once and show a blocking spinner overlay above the Add modal. Disable all background and modal actions while pending.
@@ -258,30 +286,33 @@ Provide a simple management workflow where a user enters a temporary self-declar
 - Confirmed server rejection: no committed create; user can correct retained draft or cancel it.
 - Modal Cancel: no request submitted by that cancellation; draft discarded.
 
-## 6. Rename Client — behavioral contract
+## 6. Edit Client — behavioral contract
 
 ### Preconditions
 
-- A client row is visible and no mutation is pending or blocking modal active.
+- A client row is visible, and no mutation or blocking modal is active.
+- The selected client has a stable `client_id` and currently fetched editable attributes.
 
 ### Interaction sequence
 
-1. Click **Rename** in a row.
-2. Replace that row's displayed name with an editable input initialized from its current name; focus and select/highlight the name. Replace row actions with **Save** and **Cancel**.
-3. The user can replace or modify the name. Cancel exits inline editing and discards the draft.
-4. Clicking Rename on another row, Add New Client, or another available row action automatically discards the current Rename draft and enters the selected context. No discard-confirmation dialog is required.
-5. On Save, perform the same whitespace-only validation as Add. Invalid input opens a non-retryable validation popup; close returns to the inline editor with draft preserved.
-6. Valid Save initiates one request and a blocking spinner. Underlying inline editor/draft remain logically intact until outcome is known.
-7. Confirmed success invokes G-06.
-8. Confirmed retryable failure: Retry reissues the intended rename; dismiss restores the editor and draft.
-9. Confirmed uniqueness rejection: no Retry; close returns to editable draft.
-10. Unknown outcome: reconcile; no blind retry.
+1. Click **Edit** in a client row. The table remains unchanged behind a blocking **Edit Client** modal.
+2. Initialize a **new object-shaped draft** from the selected record's editable attributes. In v1, the draft contains only `client_name`; `client_id` is retained separately as the immutable mutation target.
+3. Display the name field prefilled with the selected client's current display name. Focus/select the name input for convenient replacement (normal keyboard accessibility remains; no custom shortcuts).
+4. The user may change the draft without modifying the displayed table record or sending a backend mutation.
+5. **Cancel** closes Edit and discards the entire draft. Reopening Edit initializes a fresh draft from the currently fetched record. The modal blocks clicking Add, Edit on another row, or Delete until it closes.
+6. **Save** validates the draft using the same whitespace-only rule as Add. Invalid input opens a non-retryable validation popup; Close restores Edit with the draft preserved and sends no mutation.
+7. A valid Save sends one Update request targeting the original `client_id`, with the editable name, and shows a blocking spinner above the Edit modal.
+8. Confirmed success invokes G-06. The `client_id` remains unchanged.
+9. Confirmed allowlisted retryable failure: Retry reissues the same intended Update; dismissing the error restores Edit and its draft.
+10. Confirmed uniqueness rejection: no Retry; Close restores Edit with its draft for correction.
+11. Unknown outcome: do not blindly retry; use the reconciliation/refresh policy.
 
 ### Postconditions
 
-- Successful Rename: same client ID; updated name stored; default table reloaded.
-- Cancel or switch context: no rename submitted; unsaved Rename draft discarded.
-- Confirmed failure: preserved editable draft after dismissing error.
+- Successful Edit: same client ID; updated name persisted; default table refetched.
+- Cancel: no Update request from that cancellation; draft discarded and authoritative row unchanged.
+- Confirmed failure: editable draft preserved after error dismissal.
+- No other client attributes are editable in v1. Future memo/other attributes require separate field, API, validation, and test decisions.
 
 ## 7. Delete Client — behavioral contract
 
@@ -292,7 +323,7 @@ Provide a simple management workflow where a user enters a temporary self-declar
 ### Interaction sequence
 
 1. Click **Delete** in a row.
-2. If another row is being renamed, discard that Rename draft first.
+2. Delete is available only from the default table context; an open Add or Edit modal must be closed first.
 3. Open a blocking confirmation popup identifying the target client (e.g., **Delete ABC Farms?**) with **Confirm** and **Cancel**.
 4. Cancel closes the confirmation popup without issuing a mutation and returns to the default table context.
 5. Confirm initiates one delete request and a blocking spinner.
@@ -313,7 +344,7 @@ Provide a simple management workflow where a user enters a temporary self-declar
 - The client table is the base layer.
 - Add or Delete confirmation overlays the table; a spinner or error may overlay the current context.
 - Only the topmost layer receives pointer or keyboard input. Escape, Enter, and focus behavior must not accidentally trigger actions on obscured layers.
-- Dismissing an error popup is **not** equivalent to cancelling the underlying Add/Rename context.
+- Dismissing an error popup is **not** equivalent to cancelling the underlying Add/Edit context.
 
 ### Pending request
 
@@ -383,28 +414,28 @@ Given a normalized name already exists, when Add is submitted, then the backend 
 **AT-10 — Confirmed retryable Add failure**  
 Given backend confirms a non-commit transient failure, when Retry is clicked, then one additional create request is sent with the same intended payload; when Dismiss is clicked instead, the Add draft is preserved.
 
-### Rename
+### Edit
 
-**AT-11 — Enter Rename**  
-Given a displayed row, when Rename is clicked, then its name becomes an editable, selected input and row actions become Save and Cancel.
+**AT-11 — Open Edit with fresh draft**  
+Given a displayed client, when Edit is clicked, then a blocking Edit Client modal opens with a name draft initialized from the selected client's current display name, and the name field is focused/selected.
 
-**AT-12 — Cancel Rename**  
-Given a changed Rename draft, when Cancel is clicked, then the original displayed name returns and no rename request is made.
+**AT-12 — Cancel Edit**  
+Given a modified Edit draft, when Cancel is clicked, then the modal closes, no Update request is sent, and the table record is unchanged. Reopening Edit initializes a fresh draft from the fetched record, not the cancelled draft.
 
-**AT-13 — Switch Rename target**  
-Given row A has an unsaved Rename draft, when Rename on row B is clicked, then A's draft is discarded and B enters edit mode with B's current name selected.
+**AT-13 — Edit isolates underlying table**  
+Given an Edit modal is open, when the user attempts to activate Add, Edit on another row, Delete, or search in the background, then no background action occurs and the current Edit draft remains intact.
 
-**AT-14 — Rename to Add**  
-Given an unsaved Rename draft, when Add New Client is clicked, then Rename is cancelled and an empty Add modal opens.
+**AT-14 — Add and Edit drafts are independent**  
+Given Add is opened and cancelled after typing a name, when Edit is opened, then Edit starts from the selected client's record and does not inherit the cancelled Add draft (and vice versa).
 
-**AT-15 — Invalid Rename**  
-Given a whitespace-only Rename draft, when Save is clicked, then no mutation request occurs; Close on the validation popup restores the editable draft.
+**AT-15 — Invalid Edit**  
+Given a whitespace-only Edit name draft, when Save is clicked, then no Update request occurs; Close on the validation popup restores Edit with the draft preserved.
 
-**AT-16 — Rename success**  
-Given a valid Rename, when the backend confirms success, then the client ID is unchanged, the management UI resets, and the fresh list reflects authoritative state.
+**AT-16 — Edit success**  
+Given a valid Edit draft, when the backend confirms success, then the client ID is unchanged, the management UI resets, and the fresh list reflects authoritative state.
 
-**AT-17 — Duplicate Rename**  
-Given Rename would violate normalized uniqueness, when Save is submitted, then the backend rejects it; no Retry is offered; the draft is preserved for correction.
+**AT-17 — Duplicate Edit**  
+Given Edit would violate normalized uniqueness, when Save is submitted, then the backend rejects it; no Retry is offered; the Edit draft is preserved for correction.
 
 ### Delete
 
@@ -420,8 +451,8 @@ Given an unreferenced client, when Confirm is clicked and deletion succeeds, the
 **AT-21 — Referenced Delete**  
 Given a client referenced by a dependent record, when deletion is confirmed, then the backend rejects it, the UI explains why without offering Retry, and the client remains.
 
-**AT-22 — Switch Rename to Delete**  
-Given a Rename draft in row A, when Delete on row B is clicked and then cancelled, then A's draft remains discarded and the table returns to viewing mode.
+**AT-22 — Delete unavailable behind Edit**  
+Given an Edit modal is open for row A, when the user attempts Delete on row B, then no Delete confirmation opens and the Edit draft remains intact; after cancelling Edit, Delete may be opened normally.
 
 ### Global pending, failures, and reset
 
@@ -429,10 +460,10 @@ Given a Rename draft in row A, when Delete on row B is clicked and then cancelle
 Given a mutation is pending, when users repeatedly click controls or press submission keys, then at most one mutation request is initiated.
 
 **AT-24 — Modal keyboard isolation**  
-Given a topmost popup is open, when keyboard shortcuts/Enter/Escape are used, then no underlying form or table action fires inadvertently.
+Given a topmost popup is open, when keyboard navigation or activation occurs, then no underlying form or table action fires inadvertently; custom Enter/Escape shortcuts are not required in v1.
 
 **AT-25 — Success clears state but not identity**  
-Given a nonempty search and/or feature draft before a successful mutation, when success and refresh complete, then search, drafts, edit state, and modals are cleared but session identity remains.
+Given a nonempty search and/or Add/Edit draft before a successful mutation, when success and refresh complete, then search, drafts, action state, and modals are cleared but session identity remains.
 
 **AT-26 — Post-success refresh failure**  
 Given mutation success is confirmed but the list refresh fails, when the error is displayed and the user retries, then only the list GET is repeated; the mutation is never resubmitted.
@@ -455,16 +486,16 @@ Given the user stopped waiting and a new view was established, when a late respo
 **AT-32 — Unknown outcome**  
 Given a network failure without authoritative commit status, when the error is displayed, then the UI does not offer blind mutation Retry and explains that refreshing may not establish rollback.
 
-**AT-33 — One active edit context**  
-Given an Add modal or inline Rename is active, when an incompatible context is requested, then no two edit contexts remain active simultaneously.
+**AT-33 — One active action context**  
+Given an Add, Edit, or Delete modal is active, when the user attempts to activate a background action, then the existing modal remains the sole action context and no second action modal opens.
 
 ### Backend integrity and attribution
 
 **AT-34 — Normalized uniqueness on create**  
 Given `ABC Farms` exists, when another name with the same normalized key is inserted, then the database rejects the insert, including under concurrent requests.
 
-**AT-35 — Normalized uniqueness on rename**  
-Given two clients, when renaming one would collide with the other's normalized key, then the database rejects the update and preserves the original record.
+**AT-35 — Normalized uniqueness on edit**  
+Given two clients, when editing the name of one would collide with the other's normalized key, then the database rejects the update and preserves the original record.
 
 **AT-36 — Restrictive deletion**  
 Given a dependent record references a client ID, when deletion is attempted through the backend, then the database prevents it regardless of frontend state.
@@ -475,11 +506,17 @@ Given two sessions edit the same client from an older read, when their valid upd
 **AT-38 — Attribution**  
 Given a session identity, when a mutation is recorded, then the audit record attributes it to that self-declared label; the system does not represent it as verified authentication.
 
+**AT-39 — Draft isolation from fetched record**  
+Given Edit is open, when the user changes its draft without saving, then the underlying client list and original fetched record remain unchanged.
+
+**AT-40 — Edit request targets immutable ID**  
+Given an Edit draft for client ID 7, when Save is submitted, then the Update targets ID 7 regardless of name changes, and the ID is never editable.
+
 ## 10. Backend requirements and implementation notes (not UI design)
 
 - Store stable `client_id`, display `client_name`, and a derived `client_name_standardized` or equivalent expression/index.
 - Use a database-level UNIQUE constraint/index on the normalized comparison key. An application-only pre-insert lookup is insufficient against races.
-- Normalize consistently for create and rename. Confirmed policy: trim, collapse consecutive whitespace to one underscore, and lowercase; use one consistent implementation for INSERT and UPDATE. Precise Unicode whitespace/casefold edge behavior can be documented during backend implementation. Preserve original display name separately.
+- Normalize consistently for create and edit. Confirmed policy: trim, collapse consecutive whitespace to one underscore, and lowercase; use one consistent implementation for INSERT and UPDATE. Precise Unicode whitespace/casefold edge behavior can be documented during backend implementation. Preserve original display name separately.
 - Validate empty/whitespace-only names on **both frontend and backend**; frontend validation alone cannot protect the database/API.
 - Prevent deletion of referenced clients with restrictive foreign keys; use triggers only for additional business rules not covered by constraints. Ensure FK enforcement is actually enabled in the chosen database.
 - Define backend error responses so frontend can distinguish confirmed non-commit, confirmed non-retryable rejection, and ambiguous outcomes. If this cannot be guaranteed, default to unknown outcome.
@@ -487,7 +524,7 @@ Given a session identity, when a mutation is recorded, then the audit record att
 - Do not implement server-side cancellation as part of the 10-second UI timeout feature.
 - UI implementation may use React state and a synchronous ref guard; these are possible mechanisms, not acceptance criteria.
 
-## 11. Implementation-readiness decisions and remaining questions (2026-10-11)
+## 11. Implementation-readiness decisions and remaining questions (updated 2026-10-12)
 
 1. **Username / shared application state — confirmed:** Self-entered username is application-level state owned by the root above independent configuration workflows. In v1, use root React state and props. Username survives CRUD workflow resets and navigation within the mounted application, but a full browser refresh clears it and requires re-entry. Keep the identity interface isolated so future `sessionStorage` persistence and React Router navigation can be added without substantial Client CRUD refactoring. Rejecting blank/whitespace-only usernames remains a recommendation pending approval. This is attribution, not authentication.
 2. **Table columns — deferred:** Display all selected columns together, with Action last. Exact set of fields is undecided; finalize before table UI implementation.
@@ -501,14 +538,14 @@ Given a session identity, when a mutation is recorded, then the audit record att
 
 These are targeted implementation-readiness questions, not a reason to expand the feature into full-platform design.
 
-## 12. Decision register (snapshot, 2026-10-11)
+## 12. Decision register (snapshot, updated 2026-10-12)
 
 | ID | Decision | Rationale / consequence |
 |---|---|---|
 | ADR-C001 | Temporary self-entered username gates management | Enables progress; not secure authentication |
-| ADR-C002 | Add is a blocking modal; Rename is inline; Delete uses confirmation modal | Predictable and minimal interaction model |
-| ADR-C003 | Cancel Add/Rename discards draft | Consistent, simple; revisitable |
-| ADR-C004 | Switching inline Rename context silently discards old draft | One active edit; no extra confirmation complexity |
+| ADR-C002 | Add and Edit are blocking modals; Delete uses confirmation modal | Consistent entity-level editing; supports future fields |
+| ADR-C003 | Cancel Add/Edit discards draft | Consistent, simple; revisitable |
+| ADR-C004 | Modal action isolation replaces inline Rename switching | Background actions are inert while Edit is open |
 | ADR-C005 | Only empty/whitespace-only client names are syntactically invalid | Minimal validation scope |
 | ADR-C006 | Database enforces normalized uniqueness | Correctness across requests; fuzzy matching deferred |
 | ADR-C007 | Successful mutation resets entire management workflow and refetches; identity persists | One global success rule |
@@ -524,9 +561,11 @@ These are targeted implementation-readiness questions, not a reason to expand th
 | ADR-C017 | No custom keyboard shortcuts in v1 | Keep keyboard accessibility; avoid unnecessary shortcut logic |
 | ADR-C018 | Mutation Retry is allowlisted by explicit backend error code and confirmed non-commit | Unrecognized errors must not invite unsafe retry |
 | ADR-C019 | Document late-commit/stale-refresh limitations without additional mitigation in v1 | Explicit risk acceptance and bounded scope |
-| ADR-C020 | Add and Rename drafts are discarded on operation cancellation | Consistent draft lifecycle |
+| ADR-C020 | Add and Edit drafts are discarded on operation cancellation | Consistent draft lifecycle |
 | ADR-C021 | Root-owned temporary username lasts until full browser refresh | Keep identity outside feature; later storage/router changes remain localized |
 | ADR-C022 | Normalize names by trimming, collapsing whitespace runs to one underscore, and lowercasing | Stable uniqueness key; preserve original display name |
+| ADR-C023 | Replace inline Rename with modal Edit Client, limited to client name in v1 | Consistent Add/Edit pattern; future fields can be added without inline-editor redesign |
+| ADR-C024 | Add/Edit use isolated entity-level drafts; background actions are blocked by modals | No unsaved-edit switching policy needed; cancel discards draft |
 
 **Decision-record policy:** This table is a current snapshot. In the repository, preserve material decision changes in dated, append-only ADR entries rather than silently rewriting history.
 
@@ -538,7 +577,8 @@ These are targeted implementation-readiness questions, not a reason to expand th
 - More advanced name canonicalization and localization policy.
 - Server-side idempotency keys, mutation status lookup, or authoritative cancellation/reconciliation protocol.
 - Search performance improvements, pagination, sorting, and large-list handling.
-- Optional draft preservation on Cancel, unsaved-changes warnings, and richer keyboard/accessibility refinements.
+- Optional draft preservation on Cancel, unsaved-changes warnings, and additional keyboard conveniences (without reducing baseline accessibility).
+- Additional editable client attributes (e.g., `client_memo`) and corresponding Add/Edit fields, API contracts, and database migrations.
 - Soft deletion/archive semantics if dependent-data workflows require it.
 - Expanded audit exploration and authenticated attribution.
 
@@ -548,7 +588,7 @@ These are targeted implementation-readiness questions, not a reason to expand th
 2. Define backend client schema, normalization/uniqueness, FK restrictions, and explicit error contracts.
 3. Build identity gate and initial table/read/search behavior.
 4. Implement Add flow and test normal/invalid/duplicate/retry/unknown outcomes.
-5. Implement inline Rename and context-switch draft rules.
+5. Implement Edit modal with object-shaped draft and draft-isolation tests.
 6. Implement Delete confirmation and referential-integrity errors.
 7. Implement shared blocking overlay, 10-second waiting decisions, stale-response guard, and success reset.
 8. Run acceptance tests plus backend constraint tests; perform independent code review.
