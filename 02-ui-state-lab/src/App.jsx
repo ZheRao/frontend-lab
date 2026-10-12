@@ -38,6 +38,12 @@ function App() {
     setWorkflow('view')
   }
 
+  // methods for submitting requests
+  const submitAdd = () => {
+    console.log("add-new-client-form submitted, exitting ...")
+    exitAdd()
+  }
+
   return (
     <section className="card">
       <header className="row">
@@ -62,6 +68,7 @@ function App() {
         workflow={workflow}
         draft={draft}
         setDraft={setDraft}
+        onSave={submitAdd}
         onClose={exitAdd}
       />
 

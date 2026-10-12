@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-function AddClientModal( { workflow, draft, setDraft, onClose } ) {
+function AddClientModal( { workflow, draft, setDraft, onSave, onClose } ) {
     const dialogRef = useRef(null)
     
     useEffect(() => {
@@ -14,7 +14,7 @@ function AddClientModal( { workflow, draft, setDraft, onClose } ) {
 
     return (
         <dialog ref={dialogRef} onClose={onClose}>
-            <form method="dialog">
+            <form onSubmit={onSave}>
             <h3 className="title-popup">Add New Client</h3>
             <label>
                 Client Name: 
@@ -24,8 +24,8 @@ function AddClientModal( { workflow, draft, setDraft, onClose } ) {
                 />
             </label>
             <div className="actions">
-                <button value="save">Save</button>
-                <button value="cancel">Cancel</button>
+                <button type="button" onClick={onSave}>Save</button>
+                <button type="button" onClick={onClose}>Cancel</button>
             </div>
             </form>
         </dialog>
