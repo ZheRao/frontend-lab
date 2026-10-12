@@ -24,7 +24,7 @@ function AddClientModal( { workflow, draft, setDraft, onSave, onClose } ) {
                 />
             </label>
             <div className="actions">
-                <button type="button" onClick={onSave}>Save</button>
+                <button type="submit">Save</button>
                 <button type="button" onClick={onClose}>Cancel</button>
             </div>
             </form>

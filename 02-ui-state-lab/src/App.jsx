@@ -39,7 +39,8 @@ function App() {
   }
 
   // methods for submitting requests
-  const submitAdd = () => {
+  const submitAdd = (event) => {
+    event.preventDefault()
     console.log("add-new-client-form submitted, exitting ...")
     exitAdd()
   }
