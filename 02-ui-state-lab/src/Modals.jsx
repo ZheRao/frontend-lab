@@ -1,21 +1,21 @@
 import { useEffect, useRef } from 'react'
 
-function AddClientModal( { workflow, draft, setDraft, onSave, onClose } ) {
+export function ModifyClientModal( { open, title, draft, setDraft, onSave, onClose } ) {
     const dialogRef = useRef(null)
     
     useEffect(() => {
         const dialog = dialogRef.current 
-        if (workflow === 'add') {
+        if (open) {
             if (!dialog.open) dialog.showModal()
         } else {
             if (dialog.open) dialog.close()
         }
-    }, [workflow])
+    }, [open])
 
     return (
         <dialog ref={dialogRef} onClose={onClose}>
             <form onSubmit={onSave}>
-            <h3 className="title-popup">Add New Client</h3>
+            <h3 className="title-popup">{title}</h3>
             <label>
                 Client Name: 
                 <input className="user-entry" 
@@ -25,11 +25,10 @@ function AddClientModal( { workflow, draft, setDraft, onSave, onClose } ) {
             </label>
             <div className="actions">
                 <button type="submit">Save</button>
-                <button type="button" onClick={onClose}>Cancel</button>
+                <button type="button" onClick={()=>dialogRef.current.close()}>Cancel</button>
             </div>
             </form>
         </dialog>
     )
 }
 
-export default AddClientModal

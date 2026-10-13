@@ -2,7 +2,9 @@ import { useState, useRef, useEffect } from 'react'
 
 import './App.css'
 import ClientList from './ClientList.jsx'
-import AddClientModal from './AddClientModal.jsx'
+import { 
+  ModifyClientModal
+} from './Modals.jsx'
 
 function App() {
 
@@ -12,8 +14,9 @@ function App() {
   ]
 
   // states
-  const [workflow, setWorkflow] = useState('view') // view | add | rename | delete
-  const [draft, setDraft] = useState(null) // includes 'client_name', 'client_id'
+  const [workflow, setWorkflow] = useState('view') // view | add | edit | delete
+  const [draft, setDraft] = useState(null) // includes 'client_name'
+  const [clientId, setClientId] = useState(null)
 
   // sync reference
 
@@ -24,16 +27,29 @@ function App() {
     if (workflow !== 'view') return   // guard against being called while another workflow is active
     // enter Add operation sets
     //  workflow  -> 'add'
-    //  draft     -> null
+    //  draft     -> ''
     setDraft({client_name: ''})
     setWorkflow('add')
   }
 
+  const enterEdit = (client) => {
+    if (workflow !== 'view') return   // extra safe guard
+    // enter Edit operation sets
+    //  clientId  -> current client's ID
+    //  workflow  -> 'edit'
+    //  draft     -> current client's name
+    setClientId(client.id)
+    setDraft({client_name: client.name})
+    setWorkflow('edit')
+  }
+
   // methods for exiting different workflow modes
-  const exitAdd = () => {
-    // exit Add operation sets
+  const exitModify = () => {
+    // exit Edit operation sets
+    //  clientId  -> null
     //  workflow  -> 'view'
     //  draft     -> null
+    setClientId(null)
     setDraft(null)
     setWorkflow('view')
   }
@@ -41,8 +57,18 @@ function App() {
   // methods for submitting requests
   const submitAdd = (event) => {
     event.preventDefault()
-    console.log("add-new-client-form submitted, exitting ...")
-    exitAdd()
+
+    console.log("Target client ID: ", clientId)
+    console.log("Proposed changes: ", draft?.client_name)
+    exitModify()
+  }
+
+  const submitEdit = (event) => {
+    event.preventDefault()
+
+    console.log("Target client ID: ", clientId)
+    console.log("Proposed changes: ", draft?.client_name)
+    exitModify()
   }
 
   return (
@@ -62,15 +88,19 @@ function App() {
       <div className="pill" aria-hidden="true" />
 
       <ClientList 
-        clients = {clients_init}
+        clients={clients_init}
+        onEdit={enterEdit}
       />
 
-      <AddClientModal 
-        workflow={workflow}
+      <ModifyClientModal 
+        open={(workflow==='add') || (workflow==='edit')}
+        title={workflow==='add' ? 'Add New Client' : 'Edit Client'}
         draft={draft}
         setDraft={setDraft}
-        onSave={submitAdd}
-        onClose={exitAdd}
+        onSave={
+          workflow==='add' ? submitAdd : submitEdit
+        }
+        onClose={exitModify}
       />
 
     </section>
