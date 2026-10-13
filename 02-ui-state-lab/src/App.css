@@ -196,3 +196,72 @@ dialog button:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 2px;
 }
+
+/* ---------- Error dialog ---------- */
+/* Paste after dialog.css. Scoped with .error-dialog so it overrides the
+   generic `dialog` rules only for this popup. */
+
+.error-dialog {
+  width: min(460px, calc(100% - 32px));
+  padding: 16px 18px;
+  background: #2e2e2e;            /* grey surface sets it apart from the black modify dialog */
+  border: 1px solid #3a3a3a;
+  border-radius: 10px;
+  color: #fff;
+}
+
+.error-popup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Icon + title on one line */
+.title-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.error-icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: #e5484d;                 /* svg uses currentColor */
+}
+
+.error-message {
+  margin: 0;
+  font-size: 0.8375rem;
+  color: #e6e6e6;
+}
+
+.error-dialog .actions {
+  justify-content: flex-end;
+}
+
+/* Darker than the surface, like the screenshot's Close button.
+   `.error-dialog button` outranks the generic `dialog button` rule. */
+.error-dialog button {
+  padding: 9px 16px;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #fff;
+  background: #1f1f1f;
+  border: 1px solid #1f1f1f;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.error-dialog button:hover {
+  background: #262626;
+}
+
+.error-dialog button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}

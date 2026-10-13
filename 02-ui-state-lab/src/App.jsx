@@ -1,10 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 
 import './App.css'
 import ClientList from './ClientList.jsx'
-import { 
-  ModifyClientModal
-} from './Modals.jsx'
+import ModifyClientModal from './Modals.jsx'
+import ErrorDialog from './ErrorDialog.jsx'
 
 function App() {
 
@@ -17,6 +16,8 @@ function App() {
   const [workflow, setWorkflow] = useState('view') // view | add | edit | delete
   const [draft, setDraft] = useState(null) // includes 'client_name'
   const [clientId, setClientId] = useState(null)
+  const [error, setError] = useState(null)  // type: validation | retryable | non-retryable
+                                            // title, message
 
   // sync reference
 
@@ -49,26 +50,43 @@ function App() {
     //  clientId  -> null
     //  workflow  -> 'view'
     //  draft     -> null
+    //  error     -> null
     setClientId(null)
     setDraft(null)
     setWorkflow('view')
+    setError(null)
+  }
+  const dismissError = () => {
+    if (error?.type === 'validation') {
+      setDraft((prev)=>({...prev, client_name: ''}))
+    }
+    setError(null)
   }
 
   // methods for submitting requests
-  const submitAdd = (event) => {
+  const submitModify = (event) => {
     event.preventDefault()
 
-    console.log("Target client ID: ", clientId)
-    console.log("Proposed changes: ", draft?.client_name)
+    
+    const validationError = validateClientName(draft.client_name)
+    if (validationError) {
+      setError(validationError)
+      console.log("Invalid input")
+      return
+    }
+
+    console.log("Valid input: ", draft.client_name)
     exitModify()
   }
 
-  const submitEdit = (event) => {
-    event.preventDefault()
-
-    console.log("Target client ID: ", clientId)
-    console.log("Proposed changes: ", draft?.client_name)
-    exitModify()
+  // methods for validation
+  const validateClientName = (name) => {
+    return (
+      name.trim() === '' 
+        ? {type: 'validation', title: 'Invalid Client Name',
+           message: 'Client name cannot consist entirely of whitespace'}
+        : null
+    )
   }
 
   return (
@@ -97,11 +115,17 @@ function App() {
         title={workflow==='add' ? 'Add New Client' : 'Edit Client'}
         draft={draft}
         setDraft={setDraft}
-        onSave={
-          workflow==='add' ? submitAdd : submitEdit
-        }
+        onSave={submitModify}
         onClose={exitModify}
       />
+
+      <ErrorDialog
+        open={error !== null}
+        title={error?.title}
+        message={error?.message}
+        onClose={dismissError}
+      />
+
 
     </section>
   )
