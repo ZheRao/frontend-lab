@@ -1,6 +1,6 @@
 import ClientRow from './ClientRow.jsx'
 
-function ClientList({ clients, onEdit }) {
+function ClientList({ clients, onEdit, onDelete }) {
     return (
         <ul className="list">
             {clients.map(
@@ -9,6 +9,7 @@ function ClientList({ clients, onEdit }) {
                         key={client.id}
                         client={client}
                         onEdit={onEdit}
+                        onDelete={onDelete}
                     />
                 )
             )}

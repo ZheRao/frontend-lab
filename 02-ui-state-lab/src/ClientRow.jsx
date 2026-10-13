@@ -1,5 +1,5 @@
 
-function ClientRow( { client, onEdit } ) {
+function ClientRow( { client, onEdit, onDelete } ) {
     return (
         <li className="row">
             <div className="stack">
@@ -7,12 +7,14 @@ function ClientRow( { client, onEdit } ) {
                 <p className="client-meta">Last modified by: {client.modified_by}</p>
             </div>
             <div className="actions">
-                <button className="edit-client"
+                <button className="btn btn-secondary"
                     onClick={()=>onEdit(client)}
                 >
                     Edit
                 </button>
-                <button className="delete-client">
+                <button className="btn btn-secondary"
+                    onClick={()=>onDelete(client)}
+                >
                     Delete
                 </button>
             </div>

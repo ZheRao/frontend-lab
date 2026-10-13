@@ -2,19 +2,23 @@ import { useState } from 'react'
 
 import './App.css'
 import ClientList from './ClientList.jsx'
-import ModifyClientModal from './Modals.jsx'
+import {
+  DeleteClientModal,
+  ModifyClientModal
+} from './Modals.jsx'
 import ErrorDialog from './ErrorDialog.jsx'
 
+
+const clients_init = [
+  {id: 1, name: 'Farm A', modified_by: 'Alex'},
+  {id: 2, name: 'Farm B', modified_by: 'Bob'}
+]
+
 function App() {
-
-  const clients_init = [
-    {id: 1, name: 'Farm A', modified_by: 'Alex'},
-    {id: 2, name: 'Farm B', modified_by: 'Bob'}
-  ]
-
   // states
+  const [clients, setClients] = useState(clients_init)
   const [workflow, setWorkflow] = useState('view') // view | add | edit | delete
-  const [draft, setDraft] = useState(null) // includes 'client_name'
+  const [draft, setDraft] = useState(null) // includes 'name'
   const [clientId, setClientId] = useState(null)
   const [error, setError] = useState(null)  // type: validation | retryable | non-retryable
                                             // title, message
@@ -29,10 +33,9 @@ function App() {
     // enter Add operation sets
     //  workflow  -> 'add'
     //  draft     -> ''
-    setDraft({client_name: ''})
+    setDraft({name: ''})
     setWorkflow('add')
   }
-
   const enterEdit = (client) => {
     if (workflow !== 'view') return   // extra safe guard
     // enter Edit operation sets
@@ -40,12 +43,20 @@ function App() {
     //  workflow  -> 'edit'
     //  draft     -> current client's name
     setClientId(client.id)
-    setDraft({client_name: client.name})
+    setDraft({name: client.name})
     setWorkflow('edit')
+  }
+  const enterDelete = (client) => {
+    if (workflow !== 'view') return   // extra safe guard
+    // enter Delete operation sets
+    //  clientId  -> current client's ID
+    //  workflow  -> 'delete'
+    setClientId(client.id)
+    setWorkflow('delete')
   }
 
   // methods for exiting different workflow modes
-  const exitModify = () => {
+  const exitWorkflow = () => {
     // exit Edit operation sets
     //  clientId  -> null
     //  workflow  -> 'view'
@@ -58,7 +69,7 @@ function App() {
   }
   const dismissError = () => {
     if (error?.type === 'validation') {
-      setDraft((prev)=>({...prev, client_name: ''}))
+      setDraft((prev)=>({...prev, name: ''}))
     }
     setError(null)
   }
@@ -67,16 +78,21 @@ function App() {
   const submitModify = (event) => {
     event.preventDefault()
 
-    
-    const validationError = validateClientName(draft.client_name)
+    const validationError = validateClientName(draft.name)
     if (validationError) {
       setError(validationError)
       console.log("Invalid input")
       return
     }
 
-    console.log("Valid input: ", draft.client_name)
-    exitModify()
+    console.log("Valid input: ", draft.name)
+    exitWorkflow()
+  }
+  const confirmDelete = (event) => {
+    event.preventDefault()
+
+    console.log("Deleting client: ", selectedClient?.name)
+    exitWorkflow()
   }
 
   // methods for validation
@@ -89,6 +105,11 @@ function App() {
     )
   }
 
+  // other helpers
+  const selectedClient = clients.find(
+    client => client.id === clientId
+  )
+
   return (
     <section className="card">
       <header className="row">
@@ -96,7 +117,7 @@ function App() {
           <h2 className="title">CLIENTS</h2>
           <p className="subtitle">GrowLytics Management Portal</p>
         </div>
-        <button className="add-client"
+        <button className="btn btn-primary"
           onClick={enterAdd}
         >
           Add New Client
@@ -106,8 +127,9 @@ function App() {
       <div className="pill" aria-hidden="true" />
 
       <ClientList 
-        clients={clients_init}
+        clients={clients}
         onEdit={enterEdit}
+        onDelete={enterDelete}
       />
 
       <ModifyClientModal 
@@ -116,7 +138,14 @@ function App() {
         draft={draft}
         setDraft={setDraft}
         onSave={submitModify}
-        onClose={exitModify}
+        onClose={exitWorkflow}
+      />
+
+      <DeleteClientModal 
+        open={workflow==='delete'}
+        client_name={selectedClient?.name ?? ''}
+        onConfirm={confirmDelete}
+        onClose={exitWorkflow}
       />
 
       <ErrorDialog

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-function ModifyClientModal( { open, title, draft, setDraft, onSave, onClose } ) {
+export function ModifyClientModal( { open, title, draft, setDraft, onSave, onClose } ) {
     const dialogRef = useRef(null)
     
     useEffect(() => {
@@ -13,23 +13,56 @@ function ModifyClientModal( { open, title, draft, setDraft, onSave, onClose } ) 
     }, [open])
 
     return (
-        <dialog ref={dialogRef} onClose={onClose}>
-            <form onSubmit={onSave}>
-                <h3 className="title-popup">{title}</h3>
-                <label>
+        <dialog ref={dialogRef} onClose={onClose} className="dialog">
+            <form onSubmit={onSave} className="dialog-body">
+                <h3 className="dialog-title">{title}</h3>
+                <label className="field">
                     Client Name: 
-                    <input className="user-entry" 
-                    value={draft?.client_name ?? ''}
-                    onChange={(event)=>setDraft((prev)=>({...prev, client_name:event.target.value}))}
+                    <input className="input" 
+                    value={draft?.name ?? ''}
+                    onChange={(event)=>setDraft((prev)=>({...prev, name:event.target.value}))}
                     />
                 </label>
                 <div className="actions">
-                    <button type="submit">Save</button>
-                    <button type="button" onClick={()=>dialogRef.current.close()}>Cancel</button>
+                    <button type="submit" className="btn btn-primary">Save</button>
+                    <button type="button" className="btn btn-secondary"
+                        onClick={()=>dialogRef.current.close()}>Cancel</button>
                 </div>
             </form>
         </dialog>
     )
 }
 
-export default ModifyClientModal
+export function DeleteClientModal({ open, client_name, onConfirm, onClose}){
+    const dialogRef = useRef(null)
+
+    useEffect(()=> {
+        const dialog = dialogRef.current 
+        if (open) {
+            if (!dialog.open) dialog.showModal()
+        } else {
+            if (dialog.open) dialog.close()
+        }
+    }, [open])
+
+    return (
+        <dialog ref={dialogRef} onClose={onClose} className="dialog dialog--danger">
+            <form onSubmit={onConfirm} className="dialog-body">
+                <h3 className="dialog-title">Delete Requested</h3>
+                <p className="highlight-box">{client_name}</p>
+                <p className="dialog-text">This client will be permanently removed.</p>
+                <div className="actions">
+                    <button 
+                        type="button" className="btn btn-secondary" autoFocus
+                        onClick={()=>dialogRef.current.close()}
+                    >
+                        Cancel
+                    </button>
+                    <button type="submit" className="btn btn-danger">
+                        Delete
+                    </button>
+                </div>
+            </form>
+        </dialog>
+    )
+} 
