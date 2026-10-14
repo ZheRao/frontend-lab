@@ -34,6 +34,7 @@ function App() {
   // helpers
   const canStartRequest = (request==='idle' && error===null)
   const canEnterAction = (workflow==='view' && canStartRequest)
+  const canExit = (request==='idle' && error===null)
 
   // sync reference
 
@@ -78,7 +79,7 @@ function App() {
   }
 
   const exitWorkflow = () => {
-    if (request==='pending') return   // forbit exit workflow while a request is pending
+    if (!canExit) return   // forbit exit workflow while a request is pending
     resetWorkflow()
   }
 
