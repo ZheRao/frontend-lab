@@ -1,0 +1,365 @@
+/* =========================================================
+   1. TOKENS — every colour, radius and size lives here once.
+      Change a value here and every component follows.
+   ========================================================= */
+:root {
+  /* surfaces */
+  --bg: #000;
+  --surface-sunken: #0d0d0d;     /* inputs, highlighted boxes */
+  --surface-raised: #2e2e2e;     /* error dialog */
+  --surface-button: #1f1f1f;
+
+  /* lines */
+  --border: #2a2a2a;
+  --border-strong: #333;
+  --border-raised: #3a3a3a;
+  --border-danger: #3a2224;
+  --divider: #1f1f1f;
+
+  /* text */
+  --text: #fff;
+  --text-muted: #cfcfcf;
+  --text-faint: #a8a8a8;
+  --text-on-light: #000;
+
+  /* accents */
+  --light: #ececec;              /* pill, primary button */
+  --danger: #e5484d;
+  --danger-hover: #cf3d42;
+
+  /* shape */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-pill: 999px;
+
+  /* type scale */
+  --fs-xs: 0.75rem;              /* 12px */
+  --fs-sm: 0.8125rem;            /* 13px */
+  --fs-md: 0.9375rem;            /* 15px */
+  --fs-lg: 1.125rem;             /* 18px */
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* =========================================================
+   2. BASE
+   ========================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+/* Spacing comes from `gap`, never from default margins */
+h1, h2, h3, h4, p {
+  margin: 0;
+}
+
+/* =========================================================
+   3. LAYOUT PRIMITIVES
+   ========================================================= */
+/* Row: content left, actions right */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Stack: vertical, small gap */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Action group: buttons side by side */
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* =========================================================
+   4. PAGE: card, header, pill, list
+   ========================================================= */
+.card {
+  max-width: 770px;
+  margin: 24px auto;
+  padding: 12px 12px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.card > header.row {
+  align-items: flex-start;
+}
+
+.title {
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.subtitle {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.pill {
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--light);
+}
+
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--divider);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.client-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.client-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* =========================================================
+   5. BUTTONS — one base + variants, used everywhere
+      <button className="btn btn-primary">
+   ========================================================= */
+.btn {
+  padding: 8px 14px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--surface-button);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Main positive action (Save, Add) */
+.btn-primary {
+  color: var(--text-on-light);
+  background: var(--light);
+  border-color: var(--light);
+}
+.btn-primary:hover {
+  background: #d6d6d6;
+  border-color: #d6d6d6;
+}
+
+/* Safe / dismissive action (Cancel, Rename on rows): use `btn btn-secondary`.
+   No rule needed — .btn alone is already the outlined style. The class stays
+   in the markup to state intent and as a hook if it ever needs to differ. */
+
+/* Destructive action (Delete) */
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+.btn-danger:hover {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+/* Solid neutral (Close on the error dialog) */
+.btn-neutral {
+  background: var(--surface-button);
+  border-color: var(--surface-button);
+}
+.btn-neutral:hover {
+  background: #262626;
+}
+
+/* =========================================================
+   6. DIALOGS — one base + variants
+      <dialog className="dialog dialog--danger">
+   ========================================================= */
+.dialog {
+  width: min(420px, calc(100% - 32px));
+  padding: 20px;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+}
+
+.dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
+}
+
+/* The inner wrapper (form or div) — same layout either way */
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.dialog-title {
+  display: flex;                 /* lets an icon sit beside the text */
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.dialog-text {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.dialog .actions {
+  justify-content: flex-end;
+}
+
+/* Variant: destructive confirmation */
+.dialog--danger {
+  border-color: var(--border-danger);
+}
+
+/* Variant: error message */
+.dialog--error {
+  width: min(460px, calc(100% - 32px));
+  background: var(--surface-raised);
+  border-color: var(--border-raised);
+}
+.dialog--error .dialog-text {
+  color: #e6e6e6;
+}
+
+/* =========================================================
+   7. FORM CONTROLS
+   ========================================================= */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.input {
+  padding: 10px 12px;
+  font: inherit;
+  font-size: var(--fs-md);
+  color: var(--text);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+}
+
+.input:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+  border-color: transparent;
+}
+
+/* Read-only value shown in a box (client name in delete dialog) */
+.highlight-box {
+  padding: 10px 12px;
+  font-size: var(--fs-md);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+/* =========================================================
+   8. ICONS
+   ========================================================= */
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.icon-danger {
+  color: var(--danger);           /* svg uses currentColor */
+}
+
+/* =========================================================
+   9. PENDING DIALOG + SPINNER
+      Append to the end of App.css. Uses the existing tokens.
+   ========================================================= */
+
+/* Compact, centred card instead of the full-width dialog */
+.dialog--pending {
+  /* A little wider than the other dialogs (420px), capped on small screens.
+     For the card's width instead, use min(770px, calc(100% - 32px)). */
+  width: min(480px, calc(100% - 32px));
+  padding: 28px 32px;
+}
+
+.pending-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;            /* centre spinner, label and buttons */
+  gap: 16px;
+}
+
+.pending-label {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+/* The spinner: a ring whose top segment is bright.
+   Rotating the whole ring makes the bright segment travel around. */
+.spinner {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 3px solid var(--border-strong);   /* dim track */
+  border-top-color: var(--light);           /* bright moving arc */
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Temporary simulation buttons sit under the label */
+.pending-actions {
+  margin-top: 4px;
+}
+
+/* Users who ask their OS for less motion get a slow pulse instead of a spin */
+@media (prefers-reduced-motion: reduce) {
+  .spinner {
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    50% { opacity: 0.4; }
+  }
+}
