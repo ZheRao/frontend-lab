@@ -39,6 +39,8 @@
   --fs-lg: 1.125rem;             /* 18px */
 
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --success: #3dd68c;
 }
 
 /* =========================================================
@@ -361,5 +363,62 @@ h1, h2, h3, h4, p {
   }
   @keyframes pulse {
     50% { opacity: 0.4; }
+  }
+}
+
+/* =========================================================
+   10. SUCCESS DIALOG
+       Append to the end of App.css, and add this token to :root:
+         --success: #3dd68c;
+   ========================================================= */
+
+.dialog--success {
+  width: fit-content;                     /* as wide as icon + message, no wider */
+  min-width: 260px;                       /* short messages still look like a dialog */
+  max-width: calc(100% - 32px);           /* long messages wrap on small screens */
+  padding: 20px 32px;
+  overflow: hidden;                       /* clips the timer bar to the rounded corners */
+  position: relative;                     /* anchor for the timer bar */
+}
+
+.success-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.icon-success {
+  width: 22px;
+  height: 22px;
+  color: var(--success);
+}
+
+.success-label {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+/* Thin bar along the bottom that drains over `--duration`,
+   showing the user the dialog will close on its own */
+.success-timer {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  height: 2px;
+  width: 100%;
+  background: var(--success);
+  transform-origin: left;
+  animation: drain var(--duration, 2000ms) linear forwards;
+}
+
+@keyframes drain {
+  from { transform: scaleX(1); }
+  to   { transform: scaleX(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .success-timer {
+    animation: none;
   }
 }

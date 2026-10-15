@@ -7,9 +7,14 @@ import {
   ModifyClientModal
 } from './Modals.jsx'
 import {
-  PendingDialog
-} from './PendingDialog.jsx'
+  PendingDialog,
+  SuccessDialog
+} from './Dialogs.jsx'
 import ErrorDialog from './ErrorDialog.jsx'
+
+import {
+  fakeCreateClient
+} from './fakeClientService.js'
 
 
 const clients_init = [
@@ -28,7 +33,7 @@ function App() {
   )
   const [error, setError] = useState(null)  // type: validation | retryable | non-retryable
                                             // title, message
-  const [request, setRequest] = useState('idle')  // idle | pending
+  const [request, setRequest] = useState('idle')  // idle | pending | succeeded
   const isPending = (request==='pending')
 
   // helpers
@@ -91,7 +96,7 @@ function App() {
   }
 
   // methods for submitting requests
-  const submitModify = (event) => {
+  const submitModify = async (event) => {
     event.preventDefault()
     if (!canStartRequest) return  // don't request if another request is pending or error is present
 
@@ -101,15 +106,23 @@ function App() {
       return
     }
 
+    setRequest('pending')
+
     if (workflow==='add') {
-      console.log("Adding new client draft set: ", draft.name)
+      console.log("Submitting requests to add new client : ", draft.name)
+      try {
+        const result = await fakeCreateClient(draft.name)
+        console.log(`New client ${result.name} created`)
+        requestSucceed()
+      } catch(err) {
+        requestFailed()
+      }
+      
     } else if (workflow==='edit') {
       console.log(`Modifying Client '${selectedClient.name}' to '${draft.name}'`)
     } else {
       console.log('Error in submitting modification, not add nor edit')
     }
-
-    setRequest('pending')
   }
 
   const confirmDelete = (event) => {
@@ -133,7 +146,7 @@ function App() {
   // methods for routing request success/failure behavior
   const requestSucceed = () => {
     console.log("request succeed, closing everything")
-    setRequest('idle')
+    setRequest('succeeded')
     resetWorkflow()
     // refresh list of clients next
   }
@@ -193,13 +206,13 @@ function App() {
       />
 
       <PendingDialog open={request === 'pending'} label="Processing...">
-        <button type="button" className="btn btn-secondary" onClick={requestSucceed}>
-          Simulate success
-        </button>
-        <button type="button" className="btn btn-danger" onClick={requestFailed}>
-          Simulate failure
-        </button>
       </PendingDialog>
+
+      <SuccessDialog
+        open={request==='succeeded'}
+        message="Client saved"
+        onDone={()=>setRequest('idle')}
+      />
 
       <ErrorDialog
         open={error !== null}
