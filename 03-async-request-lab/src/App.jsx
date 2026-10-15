@@ -96,6 +96,16 @@ function App() {
   }
 
   // methods for submitting requests
+  const runWrite = async () => {
+
+  }
+
+  const simulateRefresh = (operation, payload) => {
+    if (operation==='add') {
+      setClients(payload)
+    }
+  }
+
   const submitModify = async (event) => {
     event.preventDefault()
     if (!canStartRequest) return  // don't request if another request is pending or error is present
@@ -113,9 +123,18 @@ function App() {
       try {
         const result = await fakeCreateClient(draft.name)
         console.log(`New client ${result.name} created`)
+        const updatedClients = [...clients, result]
         requestSucceed()
+        // refresh
+        simulateRefresh('add', updatedClients)
       } catch(err) {
-        requestFailed()
+        requestFailed(
+          {
+            type: "retryable",
+            title: "Failed to Add New Client",
+            message: err.message
+          }
+        ) 
       }
       
     } else if (workflow==='edit') {
@@ -151,14 +170,13 @@ function App() {
     // refresh list of clients next
   }
 
-  const requestFailed = () => {
-    console.log("request failed, skipped error dialog, returning to edit page")
+  const requestFailed = ({type, title, message}) => {
     setRequest('idle')
     
     setError({
-      type: 'retryable',
-      title: 'Request Failed',
-      message: 'The request was not completed. Please try again'
+      type: type,
+      title: title,
+      message: message
     })
     
 

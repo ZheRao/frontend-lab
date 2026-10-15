@@ -7,12 +7,12 @@ export function fakeCreateClient(name) {
     const shouldFail = callCount % 2 === 1
     return new Promise((resolve, reject) => {
         setTimeout(()=>{
-            if (false) {
-                reject(new Error("Client cannot be created"))
+            if (shouldFail) {
+                reject(new Error("Fake error, client cannot be created, please try again"))
             } else {
                 resolve({
                     id: nextId,
-                    name: `${name}`,
+                    name: name,
                     modified_by: `Test User ${nextId}`
                 })
                 nextId++
