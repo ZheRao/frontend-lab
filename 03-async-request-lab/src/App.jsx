@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 
 import './App.css'
 import ClientList from './ClientList.jsx'
@@ -42,6 +42,7 @@ function App() {
   const canExit = (request==='idle' && error===null)
 
   // sync reference
+  const requestLock = useRef(false) // prevent duplicated submission
 
   // effects
   //  disable 'Esc' while pending
@@ -100,21 +101,24 @@ function App() {
 
   }
 
-  const simulateRefresh = (operation, payload) => {
+  const simulateLocalUpdate = (operation, payload) => {
     if (operation==='add') {
-      setClients(payload)
+      setClients((prev) => [...prev, payload])
     }
   }
 
   const submitModify = async (event) => {
     event.preventDefault()
-    if (!canStartRequest) return  // don't request if another request is pending or error is present
-
+    // don't request if another request is pending or error is present & prevent dup submission
+    if (!canStartRequest || requestLock.current) return 
+     
     const validationError = validateClientName(draft.name)
     if (validationError) {
       setError(validationError)
       return
     }
+
+    requestLock.current = true
 
     setRequest('pending')
 
@@ -123,10 +127,9 @@ function App() {
       try {
         const result = await fakeCreateClient(draft.name)
         console.log(`New client ${result.name} created`)
-        const updatedClients = [...clients, result]
         requestSucceed()
         // refresh
-        simulateRefresh('add', updatedClients)
+        simulateLocalUpdate('add', result)
       } catch(err) {
         requestFailed(
           {
@@ -135,6 +138,8 @@ function App() {
             message: err.message
           }
         ) 
+      } finally {
+        requestLock.current = false
       }
       
     } else if (workflow==='edit') {
@@ -173,11 +178,7 @@ function App() {
   const requestFailed = ({type, title, message}) => {
     setRequest('idle')
     
-    setError({
-      type: type,
-      title: title,
-      message: message
-    })
+    setError({type, title, message})
     
 
   }
