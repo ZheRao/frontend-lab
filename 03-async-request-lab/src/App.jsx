@@ -45,6 +45,7 @@ function App() {
 
   // sync reference
   const requestLock = useRef(false) // prevent duplicated submission
+  const requestGeneration = useRef(0) // ignored resolves/rejects of user chosen no-op promise 
 
   // effects
   //  disable 'Esc' while pending
@@ -126,21 +127,23 @@ function App() {
     }
 
     requestLock.current = true
+    const myGeneration = ++requestGeneration.current
     setIsWaitingLong(false)
     setObservationRound(0)
 
-    // setRequest('pending')  // temporarily move inside 'add'
+    setRequest('pending')  
 
     if (workflow==='add') {
-      setRequest('pending') // temp
       console.log("Submitting requests to add new client : ", draft.name)
       try {
         const result = await fakeCreateClient(draft.name)
+        if (myGeneration !== requestGeneration.current) return //if results returned are for stale request, ignore
         console.log(`New client ${result.name} created`)
         requestSucceed()
         // refresh
         simulateLocalUpdate('add', result)
       } catch(err) {
+        if (myGeneration !== requestGeneration.current) return //if results returned are for stale request, ignore
         requestFailed(
           {
             type: "retryable",
@@ -149,7 +152,10 @@ function App() {
           }
         ) 
       } finally {
-        requestLock.current = false
+        if (myGeneration === requestGeneration.current) {
+          // only release the lock if received resolve/reject is not from ignored Promise
+          requestLock.current = false
+        }
       }
       
     } else if (workflow==='edit') {
@@ -246,11 +252,14 @@ function App() {
             </button>
             <button type="button" className="btn btn-danger"
               onClick={()=>{
-                // setRequest('idle')
-                // resetWorkflow()
+                requestGeneration.current++
+                requestLock.current = false
+                setRequest('idle')
+                resetWorkflow()
+                // perform refresh
               }}
             >
-              Exit & Refresh
+              Stop Waiting & Refresh
             </button>
           </div>
         )}
