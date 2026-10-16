@@ -2,7 +2,7 @@
 let callCount = 0 
 let nextId = 3
 
-export function fakeCreateClient(name) {
+export function fakeCreateClientOld(name) {
     callCount++
     const shouldFail = callCount % 2 === 1
     return new Promise((resolve, reject) => {
@@ -18,5 +18,10 @@ export function fakeCreateClient(name) {
                 nextId++
             }
         }, 1000)
+    })
+}
+
+export function fakeCreateClient(name) {
+    return new Promise((resolve, reject) => {
     })
 }

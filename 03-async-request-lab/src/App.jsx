@@ -35,6 +35,8 @@ function App() {
                                             // title, message
   const [request, setRequest] = useState('idle')  // idle | pending | succeeded
   const isPending = (request==='pending')
+  const [isWaitingLong, setIsWaitingLong] = useState(false)
+  const [observationRound, setObservationRound] = useState(0)
 
   // helpers
   const canStartRequest = (request==='idle' && error===null)
@@ -54,6 +56,14 @@ function App() {
       document.addEventListener('keydown', blockEscape, true)
       return () => document.removeEventListener('keydown', blockEscape, true)
   }, [isPending])
+  // 5 seconds waiting counter
+  useEffect(() => {
+    if (request !== 'pending') return
+    const timer = setTimeout(()=>{
+      setIsWaitingLong(true)
+    }, 5000)
+    return () => clearTimeout(timer)
+  }, [request, observationRound])
 
   // methods for entering different workflow modes
   const enterAdd = () => {
@@ -82,6 +92,7 @@ function App() {
     setDraft(null)
     setWorkflow('view')
     setError(null)
+    // implement auto refresh here, so every time an action canceled, list is refreshed
   }
 
   const exitWorkflow = () => {
@@ -97,10 +108,6 @@ function App() {
   }
 
   // methods for submitting requests
-  const runWrite = async () => {
-
-  }
-
   const simulateLocalUpdate = (operation, payload) => {
     if (operation==='add') {
       setClients((prev) => [...prev, payload])
@@ -119,10 +126,13 @@ function App() {
     }
 
     requestLock.current = true
+    setIsWaitingLong(false)
+    setObservationRound(0)
 
-    setRequest('pending')
+    // setRequest('pending')  // temporarily move inside 'add'
 
     if (workflow==='add') {
+      setRequest('pending') // temp
       console.log("Submitting requests to add new client : ", draft.name)
       try {
         const result = await fakeCreateClient(draft.name)
@@ -225,6 +235,25 @@ function App() {
       />
 
       <PendingDialog open={request === 'pending'} label="Processing...">
+        {isWaitingLong && (
+          <div className="actions">
+            <button type="button" className="btn btn-secondary" 
+              onClick={()=>{
+                setIsWaitingLong(false);setObservationRound((prev)=>prev+1)
+              }}
+            >
+              Keep Waiting
+            </button>
+            <button type="button" className="btn btn-danger"
+              onClick={()=>{
+                // setRequest('idle')
+                // resetWorkflow()
+              }}
+            >
+              Exit & Refresh
+            </button>
+          </div>
+        )}
       </PendingDialog>
 
       <SuccessDialog
