@@ -13,7 +13,9 @@ import {
 import ErrorDialog from './ErrorDialog.jsx'
 
 import {
-  fakeCreateClient
+  fakeCreateClient,
+  fakeDeleteClient,
+  fakeEditClient
 } from './fakeClientService.js'
 
 
@@ -28,7 +30,7 @@ function App() {
   const [workflow, setWorkflow] = useState('view') // view | add | edit | delete
   const [draft, setDraft] = useState(null) // includes 'name'
   const [clientId, setClientId] = useState(null)
-  const selectedClient = clients.find(
+  const selectedClient = clients?.find(
     client => client.id === clientId
   )
   const [error, setError] = useState(null)  // type: validation | retryable | non-retryable
@@ -69,9 +71,6 @@ function App() {
   // methods for entering different workflow modes
   const enterAdd = () => {
     if (!canEnterAction) return   // guard against being called while another workflow is active
-    // enter Add operation sets
-    //  workflow  -> 'add'
-    //  draft     -> ''
     setDraft({name: ''})
     setWorkflow('add')
   }
@@ -112,13 +111,59 @@ function App() {
   const simulateLocalUpdate = (operation, payload) => {
     if (operation==='add') {
       setClients((prev) => [...prev, payload])
+    } else if (operation==='delete') {
+      setClients((prev)=>(
+        prev.filter((client)=>(client.id!==payload.id))
+      ))
+    } else if (operation==='edit') {
+      setClients((prev) => (
+        prev.map((client)=>(
+          client.id===payload.id 
+          ? {...client, name:payload.name, modified_by:payload.modified_by} 
+          : client
+        ))
+      ))
+    }
+  }
+
+  const runWrite = async (action) => {
+    const myGeneration = ++requestGeneration.current    // if current request is aborted by user, ignore returned result/error later
+    setIsWaitingLong(false) // switched into ture every period, triggering options to keep waiting or abort
+    setObservationRound(0)  // start the timer
+
+    setRequest('pending')    // officially mark request pending
+
+    try {
+      requestLock.current = true  // issue duplication-preventing lock
+      const result = await action()   // submit request
+      if (myGeneration !== requestGeneration.current) return // ignore aborted request results
+      requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
+      // should refresh client next
+      simulateLocalUpdate(workflow, result)
+    } catch(err) {
+      if (myGeneration !== requestGeneration.current) return // ignore aborted request error
+      // set request status back to 'idle' + error dialog 
+      requestFailed({
+          type: "retryable",
+          title: "Request Failed",
+          message: err.message
+      })
+    } finally {
+      // only release the duplicated-request-submission lock when we actually process the result/error
+      //  meaning, user didn't abort this request
+      if (myGeneration === requestGeneration.current) {
+          requestLock.current = false
+      }
     }
   }
 
   const submitModify = async (event) => {
     event.preventDefault()
-    // don't request if another request is pending or error is present & prevent dup submission
-    if (!canStartRequest || requestLock.current) return 
+    // don't start another request if 
+    //    another request is pending/succeeded
+    //    error is present
+    //    duplicated request detected
+    if (!canStartRequest || requestLock.current) return
      
     const validationError = validateClientName(draft.name)
     if (validationError) {
@@ -126,51 +171,24 @@ function App() {
       return
     }
 
-    requestLock.current = true
-    const myGeneration = ++requestGeneration.current
-    setIsWaitingLong(false)
-    setObservationRound(0)
-
-    setRequest('pending')  
-
     if (workflow==='add') {
-      console.log("Submitting requests to add new client : ", draft.name)
-      try {
-        const result = await fakeCreateClient(draft.name)
-        if (myGeneration !== requestGeneration.current) return //if results returned are for stale request, ignore
-        console.log(`New client ${result.name} created`)
-        requestSucceed()
-        // refresh
-        simulateLocalUpdate('add', result)
-      } catch(err) {
-        if (myGeneration !== requestGeneration.current) return //if results returned are for stale request, ignore
-        requestFailed(
-          {
-            type: "retryable",
-            title: "Failed to Add New Client",
-            message: err.message
-          }
-        ) 
-      } finally {
-        if (myGeneration === requestGeneration.current) {
-          // only release the lock if received resolve/reject is not from ignored Promise
-          requestLock.current = false
-        }
-      }
+      await runWrite(()=>fakeCreateClient(draft.name))
       
     } else if (workflow==='edit') {
-      console.log(`Modifying Client '${selectedClient.name}' to '${draft.name}'`)
+      await runWrite(()=>fakeEditClient(clientId, selectedClient.name, draft.name))
     } else {
       console.log('Error in submitting modification, not add nor edit')
     }
   }
 
-  const confirmDelete = (event) => {
+  const confirmDelete = async (event) => {
     event.preventDefault()
-    if (!canStartRequest) return  // don't request if another request is pending or error is present
-
-    console.log("Deleting client: ", selectedClient?.name)
-    setRequest('pending')
+    // don't start another request if 
+    //    another request is pending/succeeded
+    //    error is present
+    //    duplicated request detected
+    if (!canStartRequest || requestLock.current) return
+    await runWrite(() => fakeDeleteClient(clientId, selectedClient.name))
   }
 
   // methods for validation
@@ -185,7 +203,6 @@ function App() {
 
   // methods for routing request success/failure behavior
   const requestSucceed = () => {
-    console.log("request succeed, closing everything")
     setRequest('succeeded')
     resetWorkflow()
     // refresh list of clients next
@@ -269,6 +286,7 @@ function App() {
         open={request==='succeeded'}
         message="Client saved"
         onDone={()=>setRequest('idle')}
+        duration={1000}
       />
 
       <ErrorDialog
