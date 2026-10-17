@@ -30,7 +30,7 @@ function App() {
   const [workflow, setWorkflow] = useState('view') // view | add | edit | delete
   const [draft, setDraft] = useState(null) // includes 'name'
   const [clientId, setClientId] = useState(null)
-  const selectedClient = clients?.find(
+  const selectedClient = clients.find(
     client => client.id === clientId
   )
   const [error, setError] = useState(null)  // type: validation | retryable | non-retryable
@@ -96,7 +96,8 @@ function App() {
   }
 
   const exitWorkflow = () => {
-    if (!canExit) return   // forbit exit workflow while a request is pending
+    // check disabled, because dialog will be closed nontherless, let state stay in line
+    // if (!canExit) return   // forbit exit workflow while a request is pending
     resetWorkflow()
   }
 
@@ -124,6 +125,14 @@ function App() {
         ))
       ))
     }
+  }
+
+  const abortRequest = () => {
+    requestGeneration.current++   // later when promise resolves/reject, ignore
+    requestLock.current = false   // release the concurrent-submission lock
+    setRequest('idle')
+    resetWorkflow()
+    // perform refresh
   }
 
   const runWrite = async (action) => {
@@ -268,13 +277,7 @@ function App() {
               Keep Waiting
             </button>
             <button type="button" className="btn btn-danger"
-              onClick={()=>{
-                requestGeneration.current++
-                requestLock.current = false
-                setRequest('idle')
-                resetWorkflow()
-                // perform refresh
-              }}
+              onClick={()=>{abortRequest}}
             >
               Stop Waiting & Refresh
             </button>
@@ -284,7 +287,7 @@ function App() {
 
       <SuccessDialog
         open={request==='succeeded'}
-        message="Client saved"
+        message="Request Succeeded!"
         onDone={()=>setRequest('idle')}
         duration={1000}
       />
