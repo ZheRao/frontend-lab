@@ -2,62 +2,80 @@
 let callCount = 0 
 let nextId = 3
 
-export function fakeCreateClient(name) {
+let db = [
+    {id: 1, name: 'Farm A', modified_by: 'Alex'},
+    {id: 2, name: 'Farm B', modified_by: 'Bob'}
+]
+
+function simulate(work, errorMessage='Simulated server failure') {
     callCount++
     const shouldFail = callCount % 2 === 1
     return new Promise((resolve, reject) => {
         setTimeout(()=>{
-            if (false) {
-                reject(new Error("Fake error: client cannot be created, please try again"))
+            if (shouldFail) {
+                reject(new Error(errorMessage))
             } else {
-                resolve({
-                    id: nextId,
-                    name: name,
-                    modified_by: `Test User ${nextId}`
-                })
-                nextId++
+                try {
+                    resolve(work())
+                } catch(err) {
+                    reject(err)
+                }
             }
         }, 1000)
     })
 }
 
-export function fakeUnresolvingRequest(name) {
-    return new Promise((resolve, reject) => {
+export function fakeCreateClient(name) {
+    return simulate(()=>{
+        const newRecord = {
+            id: nextId,
+            name: name,
+            modified_by: `Test User ${nextId}`
+        }
+        nextId++
+        db = [...db, newRecord]
+        return {...newRecord}
+    }, "Fake error: client cannot be created, please try again")
+}
+
+export function fakeGetClient() {
+    callCount++
+    const shouldFail = callCount % 2 === 1
+    return new Promise((resolve, reject)=>{
+        setTimeout(()=>{
+            if (false) {
+                reject(new Error("Fake error: Couldn't retrieve clients"))
+            } else {
+                resolve([...db])
+            }
+        }, 1000)
     })
 }
 
 export function fakeDeleteClient(id, name) {
-    callCount++
-    const shouldFail = callCount % 2 === 1
-    return new Promise((resolve, reject) => {
-        setTimeout(()=>{
-            if (false) {
-                reject(new Error(`Fake error: client [${name}] cannot be deleted, please try again`))
-            } else {
-                resolve({
-                    id: id
-                })
-            }
-        }, 1000)
-    })
+    const error = `Fake error: client [${name}] cannot be deleted, please try again`
+    return simulate(()=>{
+        db = db.filter((client) => (client.id!==id))
+        return {id: id}
+    }, error)
 }
 
 export function fakeEditClient(id, oldName, newName) {
-    callCount++
-    const shouldFail = callCount % 2 === 1
-    return new Promise((resolve, reject) => {
-        setTimeout(()=>{
-            if (true) {
-                reject(new Error(`Fake error: client [${oldName}] cannot be renamed to [${newName}], please try again`))
-            } else {
-                resolve({
-                    id: id,
-                    name: newName,
-                    modified_by: `Test User ${nextId}`
-                })
-                nextId++
-            }
-        }, 1000)
-    })
+    const error = `Fake error: client [${oldName}] cannot be renamed to [${newName}], please try again`
+    return simulate(()=>{
+        db = db.map((client)=>(
+            client.id===id 
+                ? {...client, name:newName, modified_by:`Test User ${nextId}`} 
+                : client
+        ))
+        nextId++
+        return {
+            id: id,
+            name: newName,
+            modified_by: `Test User ${nextId-1}`
+        }
+    }, error)
 }
+
+
 

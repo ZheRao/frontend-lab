@@ -15,18 +15,15 @@ import ErrorDialog from './ErrorDialog.jsx'
 import {
   fakeCreateClient,
   fakeDeleteClient,
-  fakeEditClient
+  fakeEditClient,
+  fakeGetClient
 } from './fakeClientService.js'
 
 
-const clients_init = [
-  {id: 1, name: 'Farm A', modified_by: 'Alex'},
-  {id: 2, name: 'Farm B', modified_by: 'Bob'}
-]
 
 function App() {
   // states
-  const [clients, setClients] = useState(clients_init)
+  const [clients, setClients] = useState([])
   const [workflow, setWorkflow] = useState('view') // view | add | edit | delete
   const [draft, setDraft] = useState(null) // includes 'name'
   const [clientId, setClientId] = useState(null)
@@ -39,17 +36,23 @@ function App() {
   const isPending = (request==='pending')
   const [isWaitingLong, setIsWaitingLong] = useState(false)
   const [observationRound, setObservationRound] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
 
   // helpers
-  const canStartRequest = (request==='idle' && error===null)
+  const canStartRequest = (request==='idle' && error===null && !isLoading)
   const canEnterAction = (workflow==='view' && canStartRequest)
-  const canExit = (request==='idle' && error===null)
+  const canExit = (request==='idle' && error===null && !isLoading)
 
   // sync reference
   const requestLock = useRef(false) // prevent duplicated submission
-  const requestGeneration = useRef(0) // ignored resolves/rejects of user chosen no-op promise 
+  const requestGeneration = useRef(0) // ignore resolves/rejects of user chosen no-op promise 
+  const refreshGeneration = useRef(0) // ignore duplicated refresh operation
 
   // effects
+  //  initial load
+  useEffect(()=>{
+    refresh()
+  }, [])
   //  disable 'Esc' while pending
   useEffect(() => {
       if (!isPending) return 
@@ -92,7 +95,6 @@ function App() {
     setDraft(null)
     setWorkflow('view')
     setError(null)
-    // implement auto refresh here, so every time an action canceled, list is refreshed
   }
 
   const exitWorkflow = () => {
@@ -109,21 +111,24 @@ function App() {
   }
 
   // methods for submitting requests
-  const simulateLocalUpdate = (operation, payload) => {
-    if (operation==='add') {
-      setClients((prev) => [...prev, payload])
-    } else if (operation==='delete') {
-      setClients((prev)=>(
-        prev.filter((client)=>(client.id!==payload.id))
-      ))
-    } else if (operation==='edit') {
-      setClients((prev) => (
-        prev.map((client)=>(
-          client.id===payload.id 
-          ? {...client, name:payload.name, modified_by:payload.modified_by} 
-          : client
-        ))
-      ))
+  const refresh = async () => {
+    const myRefreshGeneration = ++refreshGeneration.current
+    setIsLoading(true)
+    try{
+      const results = await fakeGetClient()
+      if (myRefreshGeneration !== refreshGeneration.current) return // if there's already a refresh in progress, ignore this refresh request
+      setClients(results)
+    } catch(err) {
+      if (myRefreshGeneration !== refreshGeneration.current) return // if there's already a refresh in progress, ignore this refresh request
+      requestFailed({
+        type: "non-retryable",
+        title: "Refresh Failed",
+        message: "Clients cannot be retrieved, please refresh the browser manually"
+      })
+    } finally {
+      if (myRefreshGeneration===refreshGeneration.current) {
+        setIsLoading(false)
+      }
     }
   }
 
@@ -133,6 +138,7 @@ function App() {
     setRequest('idle')
     resetWorkflow()
     // perform refresh
+    refresh()
   }
 
   const runWrite = async (action) => {
@@ -144,11 +150,11 @@ function App() {
 
     try {
       requestLock.current = true  // issue duplication-preventing lock
-      const result = await action()   // submit request
+      await action()   // submit request
       if (myGeneration !== requestGeneration.current) return // ignore aborted request results
+      // request successful => refresh (other place to refresh is when user abort request)
+      await refresh()
       requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
-      // should refresh client next
-      simulateLocalUpdate(workflow, result)
     } catch(err) {
       if (myGeneration !== requestGeneration.current) return // ignore aborted request error
       // set request status back to 'idle' + error dialog 
@@ -214,7 +220,6 @@ function App() {
   const requestSucceed = () => {
     setRequest('succeeded')
     resetWorkflow()
-    // refresh list of clients next
   }
 
   const requestFailed = ({type, title, message}) => {
@@ -242,11 +247,15 @@ function App() {
 
       <div className="pill" aria-hidden="true" />
 
-      <ClientList 
-        clients={clients}
-        onEdit={enterEdit}
-        onDelete={enterDelete}
-      />
+      {isLoading ? (
+        <PendingDialog open={isLoading} label="Loading Clients..." />
+      ) : (
+        <ClientList 
+          clients={clients}
+          onEdit={enterEdit}
+          onDelete={enterDelete}
+        />
+      )}
 
       <ModifyClientModal 
         open={(workflow==='add') || (workflow==='edit')}
@@ -277,7 +286,7 @@ function App() {
               Keep Waiting
             </button>
             <button type="button" className="btn btn-danger"
-              onClick={()=>{abortRequest}}
+              onClick={abortRequest}
             >
               Stop Waiting & Refresh
             </button>
@@ -298,8 +307,6 @@ function App() {
         message={error?.message}
         onClose={dismissError}
       />
-
-
     </section>
   )
 
