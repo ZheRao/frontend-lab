@@ -41,6 +41,7 @@
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
   --success: #3dd68c;
+  --info: #4ea1ff;
 }
 
 /* =========================================================
@@ -419,6 +420,75 @@ h1, h2, h3, h4, p {
 
 @media (prefers-reduced-motion: reduce) {
   .success-timer {
+    animation: none;
+  }
+}
+
+/* =========================================================
+   11. PENDING HELPER TEXT + NOTICE BANNER
+       Append to the end of App.css, and add this token to :root:
+         --info: #4ea1ff;
+   ========================================================= */
+
+/* Slot under the spinner: stacks the buttons row and the hint vertically */
+.pending-extra {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.pending-hint {
+  max-width: 34ch;                /* keeps the sentence to a few readable lines */
+  font-size: var(--fs-xs);
+  line-height: 1.45;
+  text-align: center;
+  color: var(--text-faint);
+}
+
+/* ---------- Notice banner (popover="manual") ---------- */
+/* Popovers get browser defaults (centred, bordered, inset: 0, margin: auto).
+   Reset them, then pin the banner to the top centre. */
+.notice-banner {
+  inset: 16px auto auto 50%;      /* top 16px, horizontally centred via translate */
+  transform: translateX(-50%);
+  margin: 0;
+  width: min(520px, calc(100% - 32px));
+  padding: 12px 16px;
+  color: var(--text);
+  background: var(--surface-raised);
+  border: 1px solid var(--border-raised);
+  border-left: 3px solid var(--info);   /* the "informational" signal */
+  border-radius: var(--radius-control);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+/* Only lay out as flex while open; closed popovers must stay display: none */
+.notice-banner:popover-open {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: notice-in 180ms ease-out;
+}
+
+.notice-title {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.notice-message {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+@keyframes notice-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .notice-banner:popover-open {
     animation: none;
   }
 }

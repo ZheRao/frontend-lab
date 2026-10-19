@@ -8,7 +8,8 @@ import {
 } from './Modals.jsx'
 import {
   PendingDialog,
-  SuccessDialog
+  SuccessDialog,
+  NoticeBanner
 } from './Dialogs.jsx'
 import ErrorDialog from './ErrorDialog.jsx'
 
@@ -38,6 +39,8 @@ function App() {
   const [observationRound, setObservationRound] = useState(0)
   const [isLoading, setIsLoading] = useState(true)
   const isSystemBusy = (request==='pending' || isLoading || error !== null)
+
+  const [notice, setNotice] = useState(null)  // null | {id, title, message}
 
   // helpers
   const canStartRequest = (request==='idle' && !isSystemBusy)
@@ -160,10 +163,16 @@ function App() {
     try {
       requestLock.current = true  // issue duplication-preventing lock
       await action()   // submit request
-      if (myGeneration !== requestGeneration.current) return // ignore aborted request results
+      if (myGeneration !== requestGeneration.current) {
+        setNotice({
+          title: "Previous Request Completed",
+          message: "An operation you stopped waiting for has since succeeded. Refresh the client list when convenient to see the latest data"
+        })
+        return
+      }
       // request successful => refresh (other place to refresh is when user abort request)
       const refreshSucceeded = await refresh()
-      if (myGeneration !== requestGeneration.current) return // check the request generation again after another async boundary
+      if (myGeneration !== requestGeneration.current) return  // check the request generation again after another async boundary 
       if (refreshSucceeded) {
         // if refresh failed, refresh has already set a blocking error
         requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
@@ -290,20 +299,25 @@ function App() {
 
       <PendingDialog open={(request === 'pending' && !isLoading)} label="Processing...">
         {isWaitingLong && (
-          <div className="actions">
-            <button type="button" className="btn btn-secondary" 
-              onClick={()=>{
-                setIsWaitingLong(false);setObservationRound((prev)=>prev+1)
-              }}
-            >
-              Keep Waiting
-            </button>
-            <button type="button" className="btn btn-danger"
-              onClick={abortRequest}
-            >
-              Stop Waiting & Refresh
-            </button>
-          </div>
+          <>
+            <div className="actions">
+              <button type="button" className="btn btn-secondary" 
+                onClick={()=>{
+                  setIsWaitingLong(false);setObservationRound((prev)=>prev+1)
+                }}
+              >
+                Keep Waiting
+              </button>
+              <button type="button" className="btn btn-danger"
+                onClick={abortRequest}
+              >
+                Stop Waiting & Refresh
+              </button>
+            </div>
+            <p className="pending-hint">
+              Stopping does not cancel the operation. It may still complete on the server. If this page receives confirmation later, you'll be notified.
+            </p>
+          </>
         )}
       </PendingDialog>
 
@@ -320,6 +334,11 @@ function App() {
         message={error?.message}
         onClose={dismissError}
         showClose={error?.type!=='non-retryable'}
+      />
+
+      <NoticeBanner 
+        notice={notice}
+        onDone={()=>setNotice(null)}
       />
     </section>
   )
