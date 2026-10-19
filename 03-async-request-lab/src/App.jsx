@@ -36,40 +36,41 @@ function App() {
   const isPending = (request==='pending')
   const [isWaitingLong, setIsWaitingLong] = useState(false)
   const [observationRound, setObservationRound] = useState(0)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const isSystemBusy = (request==='pending' || isLoading || error !== null)
 
   // helpers
-  const canStartRequest = (request==='idle' && error===null && !isLoading)
+  const canStartRequest = (request==='idle' && !isSystemBusy)
   const canEnterAction = (workflow==='view' && canStartRequest)
   const canExit = (request==='idle' && error===null && !isLoading)
 
   // sync reference
   const requestLock = useRef(false) // prevent duplicated submission
+  const refreshLock = useRef(false) // prevent duplicated refresh
   const requestGeneration = useRef(0) // ignore resolves/rejects of user chosen no-op promise 
-  const refreshGeneration = useRef(0) // ignore duplicated refresh operation
 
   // effects
   //  initial load
   useEffect(()=>{
-    refresh()
+    refresh(true)
   }, [])
   //  disable 'Esc' while pending
   useEffect(() => {
-      if (!isPending) return 
+      if (!isSystemBusy) return 
       const blockEscape = (event) => {
           if (event.key==='Escape') event.preventDefault()
       }
       document.addEventListener('keydown', blockEscape, true)
       return () => document.removeEventListener('keydown', blockEscape, true)
-  }, [isPending])
+  }, [isSystemBusy])
   // 5 seconds waiting counter
   useEffect(() => {
-    if (request !== 'pending') return
+    if (request !== 'pending' || isLoading) return
     const timer = setTimeout(()=>{
       setIsWaitingLong(true)
     }, 5000)
     return () => clearTimeout(timer)
-  }, [request, observationRound])
+  }, [request, observationRound, isLoading])
 
   // methods for entering different workflow modes
   const enterAdd = () => {
@@ -111,25 +112,33 @@ function App() {
   }
 
   // methods for submitting requests
-  const refresh = async () => {
-    const myRefreshGeneration = ++refreshGeneration.current
+  const refresh = async (initial=false) => {
+    if (refreshLock.current) return // prevent duplicated refresh
     setIsLoading(true)
     try{
+      refreshLock.current = true
       const results = await fakeGetClient()
-      if (myRefreshGeneration !== refreshGeneration.current) return // if there's already a refresh in progress, ignore this refresh request
       setClients(results)
+      return true
     } catch(err) {
-      if (myRefreshGeneration !== refreshGeneration.current) return // if there's already a refresh in progress, ignore this refresh request
-      requestFailed({
-        type: "non-retryable",
-        title: "Refresh Failed",
-        message: "Clients cannot be retrieved, please refresh the browser manually"
-      })
-    } finally {
-      if (myRefreshGeneration===refreshGeneration.current) {
-        setIsLoading(false)
+      if (initial) {
+        setError({
+          type: "non-retryable",
+          title: "Refresh Failed",
+          message: "Clients cannot be retrieved, please refresh the browser manually"
+        })
+      } else {
+        setError({
+          type: "non-retryable",
+          title: "Modification succeeded, but refresh failed",
+          message: "Your change was accepted by the server, but the updated client list could not be retrieved. Please refresh your browser manually. Do not submit the same modification again"
+        })
       }
-    }
+      return false
+    } finally {
+      setIsLoading(false)
+      refreshLock.current = false
+    } 
   }
 
   const abortRequest = () => {
@@ -153,8 +162,15 @@ function App() {
       await action()   // submit request
       if (myGeneration !== requestGeneration.current) return // ignore aborted request results
       // request successful => refresh (other place to refresh is when user abort request)
-      await refresh()
-      requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
+      const refreshSucceeded = await refresh()
+      if (myGeneration !== requestGeneration.current) return // check the request generation again after another async boundary
+      if (refreshSucceeded) {
+        // if refresh failed, refresh has already set a blocking error
+        requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
+      } else {
+        setRequest('idle')
+      }
+      
     } catch(err) {
       if (myGeneration !== requestGeneration.current) return // ignore aborted request error
       // set request status back to 'idle' + error dialog 
@@ -224,10 +240,7 @@ function App() {
 
   const requestFailed = ({type, title, message}) => {
     setRequest('idle')
-    
     setError({type, title, message})
-    
-
   }
   
 
@@ -275,7 +288,7 @@ function App() {
         isPending={isPending}
       />
 
-      <PendingDialog open={request === 'pending'} label="Processing...">
+      <PendingDialog open={(request === 'pending' && !isLoading)} label="Processing...">
         {isWaitingLong && (
           <div className="actions">
             <button type="button" className="btn btn-secondary" 
@@ -306,6 +319,7 @@ function App() {
         title={error?.title}
         message={error?.message}
         onClose={dismissError}
+        showClose={error?.type!=='non-retryable'}
       />
     </section>
   )

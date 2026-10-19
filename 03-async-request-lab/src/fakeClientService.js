@@ -8,11 +8,11 @@ let db = [
 ]
 
 function simulate(work, errorMessage='Simulated server failure') {
-    callCount++
+    // callCount++
     const shouldFail = callCount % 2 === 1
     return new Promise((resolve, reject) => {
         setTimeout(()=>{
-            if (shouldFail) {
+            if (false) {
                 reject(new Error(errorMessage))
             } else {
                 try {
@@ -39,8 +39,8 @@ export function fakeCreateClient(name) {
 }
 
 export function fakeGetClient() {
-    callCount++
-    const shouldFail = callCount % 2 === 1
+    // callCount++
+    const shouldFail = callCount % 2 === 0
     return new Promise((resolve, reject)=>{
         setTimeout(()=>{
             if (false) {
