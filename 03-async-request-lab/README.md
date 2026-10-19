@@ -1,66 +1,73 @@
-# 02 — UI State Lab
+# 03 — Async Request Lab
 
-## Purpose
+**Status:** Completed (prototype experiment)  
+**Scope:** Client CRUD asynchronous request lifecycle, authoritative refresh, and abandoned-request handling.
 
-Explore the React state coordination required by Strata's Client CRUD interface before introducing real asynchronous requests, HTTP, or a database. This lab follows the Client CRUD specification and the overarching `EXPERIMENT_ROADMAP.md`; it is a learning prototype, not a production implementation.
+## Objective
 
-## Scope and result
+Extend the state model established in `02-ui-state-lab` to handle asynchronous Add, Edit, and Delete operations against a simulated backend. Verify that request outcomes, loading, errors, and long waits do not violate the client CRUD interaction contract.
 
-Implemented and manually tested the four mutually exclusive workflows (`view`, `add`, `edit`, `delete`), shared Add/Edit form, Delete confirmation, client-name validation, error overlay, and a simulated pending overlay with manually triggered success/failure outcomes.
+This lab tests *frontend coordination*, not production HTTP infrastructure.
 
-The client list is held in local React state and seeded with sample records. Successful simulated requests **do not** mutate or refetch that list. No timers, Promises, network requests, persistence, or automated tests were introduced.
+## What was implemented
 
-## State model
+- Simulated backend owns the client records and exposes asynchronous create, edit, delete, and list operations.
+- Initial client-list load blocks modification until an authoritative read succeeds.
+- Add/Edit/Delete submissions share a `runWrite(action)` coordinator.
+- A mutation submission lock (`requestLock`) prevents duplicate requests; a separate refresh lock (`refreshLock`) prevents overlapping refreshes.
+- A successful mutation is followed by an authoritative list refresh **before** success is reported.
+- Mutation errors show retryable feedback and preserve the active workflow and draft.
+- Refresh errors show a non-dismissible error requiring a manual browser reload.
+- A five-second observation timer offers **Keep Waiting** or **Stop Waiting & Refresh** for unresolved mutations.
+- A request generation counter prevents abandoned results from controlling subsequent workflow state.
+- If an abandoned mutation later resolves successfully, a non-blocking, auto-dismissing notice informs the user. A stale rejection is ignored.
 
-| State | Values / shape | Responsibility |
-| --- | --- | --- |
-| `workflow` | `'view' \| 'add' \| 'edit' \| 'delete'` | The single active operation |
-| `request` | `'idle' \| 'pending'` | Whether a mutation outcome is unresolved |
-| `error` | `null` or `{ type, title, message }` | Blocking error presentation; currently validation and simulated retryable failure |
-| `clientId` | `null` or numeric ID | Target of Edit/Delete |
-| `draft` | `null` or `{ name: string }` | Isolated Add/Edit working copy |
-| `clients` | Array of client records | Local sample list |
+## Key React and JavaScript concepts
 
-Derived values such as `selectedClient`, `isPending`, `canSubmit`, and `canEnterAction` are calculated from state rather than stored independently.
+| Mechanism | Purpose |
+|---|---|
+| `useState` | Client records, workflow, draft, request status, loading, error, long-wait choices, and notice |
+| `useRef` | Synchronous request/refresh locks and request generation counter |
+| `useEffect` | Initial load, Escape restrictions, observation timer, and notice timer/popover lifecycle |
+| `async` / `await` | Sequence mutation and authoritative refresh |
+| `try` / `catch` / `finally` | Distinguish successful operations, failures, and cleanup |
+| Functional state update | Restart the five-second observation cycle |
+| Native `<dialog>` | Blocking workflow, pending, success, and error interactions |
+| Manual popover | Non-modal late-success notification |
 
-### Core invariants
+## Behavioral paths verified
 
-- Only one workflow can be active at once.
-- `view`: no selected ID or draft; `add`: empty-name draft and no ID; `edit`: selected ID and a copy of the current name; `delete`: selected ID and no draft.
-- A draft is never written into the client list merely by typing. Cancel discards the draft.
-- A validation error blocks submission; no request starts for whitespace-only names.
-- An unresolved request retains its workflow and draft; conflicting actions and user cancellation are guarded.
-- Error dismissal retains the workflow and selected ID. **Lab-specific UX decision:** after a whitespace-only validation error, dismissing the error clears the name field to `''` so the user can type immediately. Other failures preserve the draft.
-- Simulated success resets the workflow only after the explicit success action; simulated confirmed failure returns to idle and presents an error without discarding the draft.
+1. **Initial load succeeds:** Client list becomes available; modification controls become usable.
+2. **Initial load fails:** A non-dismissible error instructs the user to reload; Escape dismissal is blocked.
+3. **Enter and cancel:** Draft, selected client, workflow, and error are reset; no write or refresh is triggered.
+4. **Mutation succeeds + refresh succeeds:** Updated authoritative records are shown before the success state; workflow resets afterward.
+5. **Mutation fails:** Retryable error appears; dismissing it preserves the draft for retry or cancellation.
+6. **Mutation succeeds + refresh fails:** A blocking error explains that the write succeeded but the list could not be retrieved; manual reload is required.
+7. **Long wait → Keep Waiting:** Starts another five-second observation cycle without resubmitting the mutation.
+8. **Long wait → Stop Waiting & Refresh:** Releases the frontend mutation lock, invalidates the old generation, resets the workflow, and requests an authoritative read.
+9. **Abandoned mutation later succeeds:** Shows a non-blocking notice suggesting a convenient manual refresh; does not change the active workflow.
+10. **Abandoned mutation later rejects:** No notice and no changes to the current workflow.
 
-## Component responsibilities
+## Implementation notes
 
-- `App`: owns authoritative state, guards, validation, and simulated outcome transitions.
-- `ClientList` / `ClientRow`: render records and report the selected action/client upward.
-- `ModifyClientModal`: shared controlled form for Add and Edit; does not decide the operation.
-- `DeleteClientModal`: displays selected client's name and requests confirmation; Cancel receives initial focus.
-- `PendingDialog`: displays a spinner and temporary simulation buttons.
-- `ErrorDialog`: displays a structured blocking error above the underlying workflow modal.
+- `isLoading` begins as `true` to prevent an interactive initial render before the first read.
+- `isSystemBusy` is derived from mutation pending, loading, or a present error; it is not a separate stored state.
+- Processing and Loading use distinct visibility conditions so they do not intentionally present two pending dialogs at once.
+- The long-wait timer is inactive during authoritative refresh.
+- `refresh()` returns a Boolean to distinguish a successful read from a failed one. Its caller reports overall success only when the write **and** refresh succeed.
+- Generation checks are performed after asynchronous boundaries. A stale successful write may emit a notice, but cannot complete the old workflow or release a newer request's lock.
+- The Stop Waiting warning explicitly says the underlying operation is **not cancelled** and that a later notice is conditional on receiving a response.
 
-Native `<dialog>` elements are opened and closed via refs and effects in response to React props. The close callbacks and reset operations were designed to be idempotent.
+## Limitations / deferred work
 
-## Manual verification
+- Fake API timing and errors are controlled simulations, not real network or server behavior.
+- **Stop Waiting is frontend abandonment, not server cancellation.** No `AbortController` integration is implemented.
+- A backend operation may commit without the page ever receiving a response; a late-success notice is therefore best-effort, not guaranteed.
+- Automatic background reconciliation of late successes is deliberately omitted to avoid interrupting an active workflow.
+- HTTP error classification, authentication, server-side validation, database uniqueness/constraints, and production retry strategy are outside this experiment.
+- The initial-load/required-refresh failure policy intentionally requires a browser reload; in-app retry can be considered later.
+- Refresh-failure messages should be checked against the calling context during production integration: an abandonment-triggered read is not proof that the abandoned write succeeded.
 
-Verified Add/Edit/Delete opening and cancellation, draft isolation across operations, validation overlay and recovery, selection of the correct Delete target, repeated Escape protection during pending, disabled controls, simulated failure with draft preservation, simulated success cleanup, and ability to begin a fresh workflow afterward.
+## Exit criteria
 
-## Browser behavior / known limitation
-
-During testing with stacked native dialogs, repeated Escape presses could dismiss the pending dialog while React still reported `request === 'pending'`, leaving browser dialog state out of sync with application state. Preventing `cancel` on the dialog alone did not reliably resolve the observed behavior. The lab uses a **temporary, pending-scoped capture-phase `document` keydown listener** to prevent Escape, removed by effect cleanup when pending ends. This is an observed workaround, **not** a production-hardened modal strategy. Focus restoration, native close-request behavior, and stacked-dialog lifecycle need dedicated verification before reuse.
-
-## Key lessons
-
-1. Model orthogonal state dimensions rather than enumerating every UI combination.
-2. Keep editable drafts separate from fetched records and identify mutation targets by stable ID.
-3. Derive flags and selected records from authoritative state; do not duplicate them as state.
-4. Use both disabled UI controls and guarded state transitions to enforce invariants.
-5. Treat browser-owned dialog state and React-owned application state as distinct systems that must be synchronized.
-6. Distinguish user confirmation, request submission, confirmed success, confirmed failure, and unknown outcomes.
-
-## Next lab
-
-`03` introduces actual asynchronous mechanics, submission snapshots, and request-outcome handling. API and database integration remain later experiments.
+The bounded experiment is complete once the above paths are exercised and the code reflects the documented invariants. Do not expand the lab into a general-purpose request framework; transfer the verified model into Strata's actual Client CRUD implementation and revisit deferred issues only when the real integration requires them.

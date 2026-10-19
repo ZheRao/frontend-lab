@@ -10,3 +10,4 @@ Each experiment explores a bounded set of behaviors and mechanisms before applyi
 | --- | --- |
 | [01 — Task Tracker](./01-task-tracker/) | Explore React state, component communication, asynchronous CRUD, error recovery, and UI lifecycle behavior through a small task-management app. |
 | [02 — UI State Lab](./02-ui-state-lab/) | Model and manually verify Client CRUD Add/Edit/Delete workflows, isolated drafts, validation/error overlays, pending guards, and simulated request outcomes in React (no backend).|
+| [03 — Async Request Lab](./03-async-request-lab/) | Asynchronous Client CRUD with authoritative loading/refresh, duplicate-request guards, retryable and blocking errors, five-second long-wait recovery, stale-result isolation, and non-disruptive late-success notices. |
