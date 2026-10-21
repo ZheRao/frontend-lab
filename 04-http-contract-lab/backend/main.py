@@ -3,23 +3,33 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from pydantic import BaseModel
 
-from simulated_client_service import simulate_create_client
+from simulated_client_service import append_client, client_list
 
 class ClientCreateRequest(BaseModel):
     name: str
+
+class Client(BaseModel):
+    id: int
+    name: str 
+    modified_by: str
 
 app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
-    allow_methods=["POST"],
+    allow_methods=["POST", "GET"],
     allow_headers=["*"]
 )
 
-@app.post("/clients", status_code=status.HTTP_201_CREATED)
+@app.get("/clients", response_model=list[Client])
+def get_client():
+    result = client_list()
+    return result
+
+@app.post("/clients", status_code=status.HTTP_201_CREATED, response_model=Client)
 def create_client(payload: ClientCreateRequest):
-    result = simulate_create_client(name=payload.name)
+    result = append_client(name=payload.name)
 
     if result["outcome"]=="created":
         return result["client"]

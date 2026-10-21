@@ -20,6 +20,10 @@ import {
   fakeGetClient
 } from './fakeClientService.js'
 
+import {
+  getClients
+} from './clientApi.js'
+
 
 
 function App() {
@@ -31,7 +35,7 @@ function App() {
   const selectedClient = clients.find(
     client => client.id === clientId
   )
-  const [error, setError] = useState(null)  // type: validation | retryable | non-retryable
+  const [error, setError] = useState(null)  // type: validation | retryable | non-retryable | refresh | unknown
                                             // title, message
   const [request, setRequest] = useState('idle')  // idle | pending | succeeded
   const isPending = (request==='pending')
@@ -120,7 +124,7 @@ function App() {
     setIsLoading(true)
     try{
       refreshLock.current = true
-      const results = await fakeGetClient()
+      const results = await getClients()
       setClients(results)
       return true
     } catch(err) {
