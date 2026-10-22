@@ -21,8 +21,13 @@ import {
 } from './fakeClientService.js'
 
 import {
-  getClients
+  getClients,
+  createClient,
+  editClient,
+  deleteClient
 } from './clientApi.js'
+
+import { ApiError } from "./ApiError"
 
 
 
@@ -130,13 +135,13 @@ function App() {
     } catch(err) {
       if (initial) {
         setError({
-          type: "non-retryable",
+          type: "refresh",
           title: "Refresh Failed",
           message: "Clients cannot be retrieved, please refresh the browser manually"
         })
       } else {
         setError({
-          type: "non-retryable",
+          type: "refresh",
           title: "Modification succeeded, but refresh failed",
           message: "Your change was accepted by the server, but the updated client list could not be retrieved. Please refresh your browser manually. Do not submit the same modification again"
         })
@@ -187,11 +192,19 @@ function App() {
     } catch(err) {
       if (myGeneration !== requestGeneration.current) return // ignore aborted request error
       // set request status back to 'idle' + error dialog 
-      requestFailed({
-          type: "retryable",
-          title: "Request Failed",
+      if (err instanceof ApiError && err.type === "non-retryable") {
+        requestFailed({
+          type: "non-retryable",
+          title: "Request Rejected",
           message: err.message
-      })
+        })
+      } else {
+        requestFailed({
+          type: "unknown",
+          title: "Operation Outcome Unknown",
+          message: "The server may have completed the operation. Refresh the browser before attempting another change."
+        })
+      }
     } finally {
       // only release the duplicated-request-submission lock when we actually process the result/error
       //  meaning, user didn't abort this request
@@ -216,10 +229,10 @@ function App() {
     }
 
     if (workflow==='add') {
-      await runWrite(()=>fakeCreateClient(draft.name))
+      await runWrite(()=>createClient(draft.name))
       
     } else if (workflow==='edit') {
-      await runWrite(()=>fakeEditClient(clientId, selectedClient.name, draft.name))
+      await runWrite(()=>editClient(clientId, draft.name))
     } else {
       console.log('Error in submitting modification, not add nor edit')
     }
@@ -232,7 +245,7 @@ function App() {
     //    error is present
     //    duplicated request detected
     if (!canStartRequest || requestLock.current) return
-    await runWrite(() => fakeDeleteClient(clientId, selectedClient.name))
+    await runWrite(() => deleteClient(clientId))
   }
 
   // methods for validation
@@ -337,7 +350,10 @@ function App() {
         title={error?.title}
         message={error?.message}
         onClose={dismissError}
-        showClose={error?.type!=='non-retryable'}
+        showClose={
+          error?.type !== "refresh" &&
+          error?.type !== "unknown"
+        }
       />
 
       <NoticeBanner 

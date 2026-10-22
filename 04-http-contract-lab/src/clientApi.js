@@ -8,6 +8,10 @@ const isValidClient = (client) =>
     typeof client?.name === "string" && 
     typeof client?.modified_by === "string"
 
+const isValidErrorData = (data, error_code) => 
+    (data?.detail?.code === error_code) &&
+    (typeof data?.detail?.message === "string")
+
 export async function getClients() {
     try {
         const response = await fetch(`${baseURL}/clients`)
@@ -63,7 +67,7 @@ export async function createClient(name) {
             throw unknownMutationOutcome()  // status code says CREATED, but JSON body is malformed
         }
     } else if (response.status === 409) {
-        if ((data?.detail?.code === "DUPLICATE_CLIENT") && (typeof data?.detail?.message === "string")) {
+        if (isValidErrorData(data, "DUPLICATE_CLIENT")) {
             throw new ApiError(
                 "non-retryable",
                 "DUPLICATE_CLIENT",
@@ -74,5 +78,117 @@ export async function createClient(name) {
         }
     } else {
         throw unknownMutationOutcome()  
+    }
+}
+
+export async function editClient(clientId, name) {
+    let response
+    let data
+
+    try {
+        response = await fetch(
+            `${baseURL}/clients/${clientId}`,
+            {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({name})
+            }
+        )
+
+        data = await response.json()
+    } catch (err) {
+        throw unknownMutationOutcome(err)
+    }
+
+    console.log("HTTP status: ", response.status)
+    console.log("Response body: ", data)
+
+    if (response.status === 200) {
+        if (isValidClient(data) && data.id === clientId) {
+            return data
+        } else {
+            throw unknownMutationOutcome()
+        }
+    } else if (response.status === 409) {
+        if (isValidErrorData(data, "DUPLICATE_CLIENT")) {
+            throw new ApiError(
+                "non-retryable",
+                "DUPLICATE_CLIENT",
+                data.detail.message
+            )
+        } else {
+            throw unknownMutationOutcome()
+        }
+    } else if (response.status === 404) {
+        if (isValidErrorData(data, "CLIENT_NOT_FOUND")) {
+            throw new ApiError(
+                "non-retryable",
+                "CLIENT_NOT_FOUND",
+                data.detail.message
+            )
+        } else {
+            throw unknownMutationOutcome()
+        }
+    } else {
+        throw unknownMutationOutcome()
+    }
+}
+
+export async function deleteClient(clientId) {
+    let response 
+    let data 
+
+    try {
+        response = await fetch(
+            `${baseURL}/clients/${clientId}`,
+            {
+                method: "DELETE",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        )
+    } catch (err) {
+        throw unknownMutationOutcome(err)
+    }
+
+    console.log("HTTP status: ", response.status)
+
+    if (response.status === 204) {
+        return
+    } else {
+        try {
+            data = await response.json()
+        } catch (err) {
+            throw unknownMutationOutcome(err)
+        }
+        
+        console.log("Response body: ", data)
+
+        if (response.status === 409) {
+            if (isValidErrorData(data, "CLIENT_REFERENCED")) {
+                throw new ApiError(
+                    "non-retryable",
+                    "CLIENT_REFERENCED",
+                    data.detail.message
+                )
+            } else {
+                throw unknownMutationOutcome()
+            }
+        } else if (response.status === 404) {
+            if (isValidErrorData(data, "CLIENT_NOT_FOUND")) {
+                throw new ApiError(
+                    "non-retryable",
+                    "CLIENT_NOT_FOUND",
+                    data.detail.message
+                )
+            } else {
+                throw unknownMutationOutcome()
+            }
+        } else {
+            throw unknownMutationOutcome()
+        }
     }
 }
