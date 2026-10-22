@@ -45,6 +45,14 @@ def create_client(payload: ClientModifyRequest):
                     "message": "A client with this name already exists."
                 }
             )
+        elif result["outcome"]=="invalid_name":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail={
+                    "code": "INVALID_CLIENT_NAME",
+                    "message": "Client name cannot be empty or consist only of whitespace."
+                }
+            )
 
     raise RuntimeError("Unrecognized business outcome")
 
@@ -70,6 +78,14 @@ def update_client(client_id: int, payload: ClientModifyRequest):
                 detail={
                     "code": "DUPLICATE_CLIENT",
                     "message": "A client with this name already exists."
+                }
+            )
+        elif result["outcome"]=="invalid_name":
+            raise HTTPException(
+                status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+                detail={
+                    "code": "INVALID_CLIENT_NAME",
+                    "message": "Client name cannot be empty or consist only of whitespace."
                 }
             )
     raise RuntimeError("Unrecognized business outcome")

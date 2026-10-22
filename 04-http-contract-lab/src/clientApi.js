@@ -66,6 +66,16 @@ export async function createClient(name) {
         } else {
             throw unknownMutationOutcome()  // status code says CREATED, but JSON body is malformed
         }
+    } else if (response.status === 422) {
+        if (isValidErrorData(data, "INVALID_CLIENT_NAME")) {
+            throw new ApiError(
+                "non-retryable",
+                "INVALID_CLIENT_NAME",
+                data.detail.message
+            )
+        } else {
+            throw unknownMutationOutcome()
+        }
     } else if (response.status === 409) {
         if (isValidErrorData(data, "DUPLICATE_CLIENT")) {
             throw new ApiError(
@@ -108,6 +118,16 @@ export async function editClient(clientId, name) {
     if (response.status === 200) {
         if (isValidClient(data) && data.id === clientId) {
             return data
+        } else {
+            throw unknownMutationOutcome()
+        }
+    } else if (response.status === 422) {
+        if (isValidErrorData(data, "INVALID_CLIENT_NAME")) {
+            throw new ApiError(
+                "non-retryable",
+                "INVALID_CLIENT_NAME",
+                data.detail.message
+            )
         } else {
             throw unknownMutationOutcome()
         }

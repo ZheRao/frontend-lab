@@ -11,6 +11,9 @@ def id_generator(start: int=3):
         yield next_id 
         next_id += 1
 
+def is_valid_name(name: str) -> bool:
+    return name.strip() != ""
+
 def client_list(success: bool = True) -> list[dict[str,str|int]]|None:
     if success:
         return db.copy()
@@ -19,6 +22,8 @@ ids = id_generator()
 
 def append_client(name: str, outcome: str="normal") -> dict|None:
     # time.sleep(15)
+    if not is_valid_name(name):
+        return {"outcome": "invalid_name"}
     if outcome == "normal":
         new_client = {
             "id": next(ids),
@@ -36,6 +41,8 @@ def append_client(name: str, outcome: str="normal") -> dict|None:
         }
 
 def modify_client(client_id: int, name: str, outcome: str="normal") -> dict|None:
+    if not is_valid_name(name):
+        return {"outcome": "invalid_name"}
     search_success = False 
     client_idx = -1
     for i in range(len(db)):
