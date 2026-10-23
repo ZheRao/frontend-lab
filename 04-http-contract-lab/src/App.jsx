@@ -14,13 +14,6 @@ import {
 import ErrorDialog from './ErrorDialog.jsx'
 
 import {
-  fakeCreateClient,
-  fakeDeleteClient,
-  fakeEditClient,
-  fakeGetClient
-} from './fakeClientService.js'
-
-import {
   getClients,
   createClient,
   editClient,
@@ -63,16 +56,20 @@ function App() {
 
   // effects
   //  initial load
-  useEffect(async ()=>{
-    const succeeded = await refresh()
-    if (!succeeded) {
-      setError({
-        type: "refresh",
-        code: "REFRESH_ERROR",
-        title: "Initial Loading Failed",
-        message: "Initial client list failed to load, please refresh again."
-      })
+  useEffect(()=>{
+    const loadInitial = async () => {
+      const refreshResult = await refresh()
+      if (refreshResult === "failed") {
+        setError({
+          type: "refresh",
+          code: "REFRESH_ERROR",
+          title: "Initial Loading Failed",
+          message: "Initial client list failed to load, please refresh again.",
+          recover: "refresh"
+        })
+      }
     }
+    loadInitial() // called instead of returning a promise as cleanup function before the next run or unmount
   }, [])
   //  disable 'Esc' while pending
   useEffect(() => {
@@ -126,8 +123,8 @@ function App() {
   }
 
   // methods for submitting requests
-  const refresh = async (initial=false) => {
-    if (refreshLock.current) return // prevent duplicated refresh
+  const refresh = async () => {
+    if (refreshLock.current) return 'skipped' // prevent duplicated refresh
 
     refreshLock.current = true
     setIsLoading(true)
@@ -138,9 +135,9 @@ function App() {
     try{
       const results = await getClients()
       setClients(results)
-      return true
+      return 'succeeded'
     } catch(err) {
-      return false
+      return 'failed'
     } finally {
       setIsLoading(false)
       refreshLock.current = false
@@ -153,8 +150,8 @@ function App() {
     setRequest('idle')
     resetWorkflow()
     // perform refresh
-    const succeeded = await refresh()
-    if (!succeeded) {
+    const refreshResult = await refresh()
+    if (refreshResult === "failed") {
       setError({
         type: "refresh",
         code: "REFRESH_ERROR",
@@ -185,7 +182,7 @@ function App() {
       // request successful => refresh (other place to refresh is when user abort request)
       const refreshSucceeded = await refresh()
       if (myGeneration !== requestGeneration.current) return  // check the request generation again after another async boundary 
-      if (refreshSucceeded) {
+      if (refreshSucceeded === "succeeded") {
         // if refresh failed, refresh has already set a blocking error
         requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
       } else {
@@ -214,7 +211,7 @@ function App() {
           type: "unknown",
           code: err.code,
           title: "Operation Outcome Unknown",
-          message: "The server may have completed the operation. Refresh the browser before attempting another change.",
+          message: "The server may have completed the operation. Refresh before attempting another change.",
           recovery: "refresh"
         })
       }
@@ -265,8 +262,9 @@ function App() {
   const validateClientName = (name) => {
     return (
       name.trim() === '' 
-        ? {type: 'validation', title: 'Invalid Client Name',
-           message: 'Client name cannot consist entirely of whitespace'}
+        ? {type: 'validation', title: 'Invalid Client Name', code: 'INVALID_CLIENT_NAME',
+           message: 'Client name cannot consist entirely of whitespace',
+          recovery: 'return-to-draft'}
         : null
     )
   }
@@ -288,7 +286,7 @@ function App() {
 
     switch (err.code) {
       case "INVALID_CLIENT_NAME":
-      case "DUPLICATED_CLIENT":
+      case "DUPLICATE_CLIENT":
         return "return-to-draft"
       
       case "CLIENT_REFERENCED":
@@ -309,9 +307,9 @@ function App() {
       resetWorkflow()
     } else if (error.recovery === "refresh") {
       resetWorkflow()
-      const succeeded = await refresh()
+      const refreshResult = await refresh()
 
-      if (!succeeded) {
+      if (refreshResult === "failed") {
         setError({
           type: "refresh",
           code: "REFRESH_ERROR",
@@ -320,6 +318,14 @@ function App() {
           recovery: "refresh"
         })
       }
+    } else {
+      setError({
+          type: "unknown",
+          code: "UNKNOWN",
+          title: "Unknown Error Occurred",
+          message: `An error without valid recovery option has occurred, please contact system admin with this error code: ${error.code}`,
+          recovery: "refresh"
+      })
     }
   }
   

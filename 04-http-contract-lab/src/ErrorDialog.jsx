@@ -16,7 +16,7 @@ export function ErrorDialog({ open, title, message, actionLabel, onAction }) {
     return (
         <dialog ref={errRef}
             onCancel={(event)=>{
-                if (!showClose) event.preventDefault()
+                event.preventDefault()
             }}
             className="dialog dialog--error"
         >
