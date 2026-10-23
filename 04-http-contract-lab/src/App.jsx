@@ -22,7 +22,7 @@ import {
 
 import { ApiError } from "./ApiError"
 
-
+const KNOWN_RECOVERIES = ['return-to-draft', 'return-to-table', 'refresh']
 
 function App() {
   // states
@@ -35,7 +35,6 @@ function App() {
   )
   const [error, setError] = useState(null)  // type: validation | retryable | non-retryable | refresh | unknown
                                             // code, title, message, recovery
-  const KNOWN_RECOVERIES = ['return-to-draft', 'return-to-table', 'refresh']
   const recovery = KNOWN_RECOVERIES.includes(error?.recovery) ? error.recovery : 'refresh'  // make recovery universal
   const [request, setRequest] = useState('idle')  // idle | pending | succeeded
   const isPending = (request==='pending')
@@ -131,9 +130,6 @@ function App() {
     refreshLock.current = true
     setIsLoading(true)
 
-    // return 
-    //  true: if a validated client list was retrieved and supplied to React
-    //  false: if the list could not be retrieved or a refresh was already in progress
     try{
       const results = await getClients()
       setClients(results)
@@ -182,10 +178,9 @@ function App() {
         return
       }
       // request successful => refresh (other place to refresh is when user abort request)
-      const refreshSucceeded = await refresh()
+      const refreshResult = await refresh()
       if (myGeneration !== requestGeneration.current) return  // check the request generation again after another async boundary 
-      if (refreshSucceeded === "succeeded") {
-        // if refresh failed, refresh has already set a blocking error
+      if (refreshResult === "succeeded") {
         requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
       } else {
         requestFailed({
@@ -311,6 +306,7 @@ function App() {
           message: `An error without valid recovery option has occurred, please contact system admin with this error code: ${error.code}`,
           recovery: "refresh"
       })
+      return
     }
 
     if (recovery === "return-to-draft") {
