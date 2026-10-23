@@ -41,7 +41,7 @@ function App() {
     client => client.id === clientId
   )
   const [error, setError] = useState(null)  // type: validation | retryable | non-retryable | refresh | unknown
-                                            // title, message
+                                            // code, title, message, recovery
   const [request, setRequest] = useState('idle')  // idle | pending | succeeded
   const isPending = (request==='pending')
   const [isWaitingLong, setIsWaitingLong] = useState(false)
@@ -63,8 +63,16 @@ function App() {
 
   // effects
   //  initial load
-  useEffect(()=>{
-    refresh(true)
+  useEffect(async ()=>{
+    const succeeded = await refresh()
+    if (!succeeded) {
+      setError({
+        type: "refresh",
+        code: "REFRESH_ERROR",
+        title: "Initial Loading Failed",
+        message: "Initial client list failed to load, please refresh again."
+      })
+    }
   }, [])
   //  disable 'Esc' while pending
   useEffect(() => {
@@ -110,12 +118,6 @@ function App() {
     setError(null)
   }
 
-  const exitWorkflow = () => {
-    // check disabled, because dialog will be closed nontherless, let state stay in line
-    // if (!canExit) return   // forbit exit workflow while a request is pending
-    resetWorkflow()
-  }
-
   const dismissError = () => {
     if (error?.type === 'validation') {
       setDraft((prev)=>({...prev, name: ''}))
@@ -126,26 +128,18 @@ function App() {
   // methods for submitting requests
   const refresh = async (initial=false) => {
     if (refreshLock.current) return // prevent duplicated refresh
+
+    refreshLock.current = true
     setIsLoading(true)
+
+    // return 
+    //  true: if a validated client list was retrieved and supplied to React
+    //  false: if the list could not be retrieved or a refresh was already in progress
     try{
-      refreshLock.current = true
       const results = await getClients()
       setClients(results)
       return true
     } catch(err) {
-      if (initial) {
-        setError({
-          type: "refresh",
-          title: "Refresh Failed",
-          message: "Clients cannot be retrieved, please refresh the browser manually"
-        })
-      } else {
-        setError({
-          type: "refresh",
-          title: "Modification succeeded, but refresh failed",
-          message: "Your change was accepted by the server, but the updated client list could not be retrieved. Please refresh your browser manually. Do not submit the same modification again"
-        })
-      }
       return false
     } finally {
       setIsLoading(false)
@@ -153,13 +147,22 @@ function App() {
     } 
   }
 
-  const abortRequest = () => {
+  const abortRequest = async () => {
     requestGeneration.current++   // later when promise resolves/reject, ignore
     requestLock.current = false   // release the concurrent-submission lock
     setRequest('idle')
     resetWorkflow()
     // perform refresh
-    refresh()
+    const succeeded = await refresh()
+    if (!succeeded) {
+      setError({
+        type: "refresh",
+        code: "REFRESH_ERROR",
+        title: "Unable to Refresh Clients",
+        message: "The previous operation may still complete. The client list could not be refreshed, so its outcome remains uncertain.",
+        recovery: "refresh"
+      })
+    }
   }
 
   const runWrite = async (action) => {
@@ -186,7 +189,13 @@ function App() {
         // if refresh failed, refresh has already set a blocking error
         requestSucceed()    // mark reqest 'succeeded' (triger success dialog) then reset workflow
       } else {
-        setRequest('idle')
+        requestFailed({
+          type: "refresh",
+          code: "REFRESH_ERROR",
+          title: "Change Succeeded, Refresh Failed",
+          message: "Your change was confirmed by the server, but the updated list could not be retrieved.",
+          recovery: "refresh"
+        })
       }
       
     } catch(err) {
@@ -195,14 +204,18 @@ function App() {
       if (err instanceof ApiError && err.type === "non-retryable") {
         requestFailed({
           type: "non-retryable",
+          code: err.code,
           title: "Request Rejected",
-          message: err.message
+          message: err.message,
+          recovery: recoveryForError(err)
         })
       } else {
         requestFailed({
           type: "unknown",
+          code: err.code,
           title: "Operation Outcome Unknown",
-          message: "The server may have completed the operation. Refresh the browser before attempting another change."
+          message: "The server may have completed the operation. Refresh the browser before attempting another change.",
+          recovery: "refresh"
         })
       }
     } finally {
@@ -264,9 +277,50 @@ function App() {
     resetWorkflow()
   }
 
-  const requestFailed = ({type, title, message}) => {
+  const requestFailed = ({ type, code, title, message, recovery }) => {
     setRequest('idle')
-    setError({type, title, message})
+    setError({type, code, title, message, recovery})
+  }
+
+  // error handling
+  function recoveryForError(err) {
+    if (!(err instanceof ApiError)) return "refresh"
+
+    switch (err.code) {
+      case "INVALID_CLIENT_NAME":
+      case "DUPLICATED_CLIENT":
+        return "return-to-draft"
+      
+      case "CLIENT_REFERENCED":
+        return "return-to-table"
+
+      case "CLIENT_NOT_FOUND":
+      default:
+        return "refresh"
+    }
+  }
+
+  const handleErrorRecovery = async () => {
+    if (!error) return 
+
+    if (error.recovery === "return-to-draft") {
+      dismissError()
+    } else if (error.recovery === "return-to-table") {
+      resetWorkflow()
+    } else if (error.recovery === "refresh") {
+      resetWorkflow()
+      const succeeded = await refresh()
+
+      if (!succeeded) {
+        setError({
+          type: "refresh",
+          code: "REFRESH_ERROR",
+          title: "Refresh Failed",
+          message: "The client list could not be retrieved. Please try refreshing again.",
+          recovery: "refresh"
+        })
+      }
+    }
   }
   
 
@@ -302,7 +356,7 @@ function App() {
         draft={draft}
         setDraft={setDraft}
         onSave={submitModify}
-        onClose={exitWorkflow}
+        onClose={resetWorkflow}
         isPending={isPending}
       />
 
@@ -310,7 +364,7 @@ function App() {
         open={workflow==='delete'}
         client_name={selectedClient?.name ?? ''}
         onConfirm={confirmDelete}
-        onClose={exitWorkflow}
+        onClose={resetWorkflow}
         isPending={isPending}
       />
 
@@ -349,11 +403,10 @@ function App() {
         open={error !== null}
         title={error?.title}
         message={error?.message}
-        onClose={dismissError}
-        showClose={
-          error?.type !== "refresh" &&
-          error?.type !== "unknown"
+        actionLabel={
+          error?.recovery === "refresh" ? "Refresh Client List" : "Close"
         }
+        onAction={handleErrorRecovery}
       />
 
       <NoticeBanner 

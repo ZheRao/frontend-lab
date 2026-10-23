@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 
-export function ErrorDialog({ open, title, message, onClose, showClose=true }) {
+export function ErrorDialog({ open, title, message, actionLabel, onAction }) {
     const errRef = useRef(null)
 
     useEffect(() => {
@@ -14,7 +14,7 @@ export function ErrorDialog({ open, title, message, onClose, showClose=true }) {
     }, [open])
 
     return (
-        <dialog ref={errRef} onClose={onClose}
+        <dialog ref={errRef}
             onCancel={(event)=>{
                 if (!showClose) event.preventDefault()
             }}
@@ -33,7 +33,7 @@ export function ErrorDialog({ open, title, message, onClose, showClose=true }) {
                 </h3>
                 <p className="dialog-text">{message}</p>
                 <div className="actions">
-                    {showClose && <button type="button" className="btn btn-neutral" onClick={onClose}>Close</button>}
+                    <button type="button" className="btn btn-neutral" onClick={onAction}>{actionLabel}</button>
                 </div>
             </div>
         </dialog>
@@ -41,3 +41,4 @@ export function ErrorDialog({ open, title, message, onClose, showClose=true }) {
 }
 
 export default ErrorDialog
+
