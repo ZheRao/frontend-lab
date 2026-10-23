@@ -206,7 +206,7 @@ function App() {
       } else {
         requestFailed({
           type: "unknown",
-          code: err.code,
+          code: "UNKNOWN_ERROR",
           title: "Operation Outcome Unknown",
           message: "The server may have completed the operation. Refresh before attempting another change.",
           recovery: "refresh"

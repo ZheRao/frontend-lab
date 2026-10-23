@@ -21,7 +21,7 @@ def client_list(success: bool = True) -> list[dict[str,str|int]]|None:
 ids = id_generator()
 
 def append_client(name: str, outcome: str="normal") -> dict|None:
-    # time.sleep(15)
+    time.sleep(15)
     if not is_valid_name(name):
         return {"outcome": "invalid_name"}
     if outcome == "normal":
