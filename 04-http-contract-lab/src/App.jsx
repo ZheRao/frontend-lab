@@ -35,6 +35,8 @@ function App() {
   )
   const [error, setError] = useState(null)  // type: validation | retryable | non-retryable | refresh | unknown
                                             // code, title, message, recovery
+  const KNOWN_RECOVERIES = ['return-to-draft', 'return-to-table', 'refresh']
+  const recovery = KNOWN_RECOVERIES.includes(error?.recovery) ? error.recovery : 'refresh'  // make recovery universal
   const [request, setRequest] = useState('idle')  // idle | pending | succeeded
   const isPending = (request==='pending')
   const [isWaitingLong, setIsWaitingLong] = useState(false)
@@ -65,7 +67,7 @@ function App() {
           code: "REFRESH_ERROR",
           title: "Initial Loading Failed",
           message: "Initial client list failed to load, please refresh again.",
-          recover: "refresh"
+          recovery: "refresh"
         })
       }
     }
@@ -301,11 +303,21 @@ function App() {
   const handleErrorRecovery = async () => {
     if (!error) return 
 
-    if (error.recovery === "return-to-draft") {
+    if (recovery!==error.recovery) {
+        setError({
+          type: "unknown",
+          code: "UNKNOWN",
+          title: "Unknown Error Occurred",
+          message: `An error without valid recovery option has occurred, please contact system admin with this error code: ${error.code}`,
+          recovery: "refresh"
+      })
+    }
+
+    if (recovery === "return-to-draft") {
       dismissError()
-    } else if (error.recovery === "return-to-table") {
+    } else if (recovery === "return-to-table") {
       resetWorkflow()
-    } else if (error.recovery === "refresh") {
+    } else if (recovery === "refresh") {
       resetWorkflow()
       const refreshResult = await refresh()
 
@@ -318,14 +330,6 @@ function App() {
           recovery: "refresh"
         })
       }
-    } else {
-      setError({
-          type: "unknown",
-          code: "UNKNOWN",
-          title: "Unknown Error Occurred",
-          message: `An error without valid recovery option has occurred, please contact system admin with this error code: ${error.code}`,
-          recovery: "refresh"
-      })
     }
   }
   
@@ -409,9 +413,7 @@ function App() {
         open={error !== null}
         title={error?.title}
         message={error?.message}
-        actionLabel={
-          error?.recovery === "refresh" ? "Refresh Client List" : "Close"
-        }
+        actionLabel={recovery==='refresh' ? 'Refresh Client List' : 'Close'}
         onAction={handleErrorRecovery}
       />
 
