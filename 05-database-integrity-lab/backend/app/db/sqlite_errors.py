@@ -23,7 +23,7 @@ def translate_sqlite_error(err: BaseException) -> DBErrorKind:
 
     if not error_name: return DBErrorKind.UNRECOGNIZED
 
-    if "sqlite_busy" in error_name.lower(): return DBErrorKind.BUSY
+    if error_name.startswith("SQLITE_BUSY"): return DBErrorKind.BUSY
 
     match error_name:
         case "SQLITE_CONSTRAINT_UNIQUE": return DBErrorKind.UNIQUE

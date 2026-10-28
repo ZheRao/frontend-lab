@@ -8,12 +8,14 @@ def get_connection(db_path: str, timeout: float=BUSY_TIMEOUT) -> sqlite3.Connect
     Establish a connection, enable and verify foreign-key enforcement, return the configured connection
     """
     conn = sqlite3.connect(db_path, autocommit=True, timeout=timeout)
-    conn.execute("PRAGMA foreign_keys = ON")
-    fk_check = conn.execute("PRAGMA foreign_keys").fetchone()[0]
-    if fk_check != 1:
+    try:
+        conn.execute("PRAGMA foreign_keys = ON")
+        fk_check = conn.execute("PRAGMA foreign_keys").fetchone()[0]
+        if fk_check != 1:
+            raise RuntimeError("Connection with FK constraint cannot be established.")
+        conn.autocommit = False 
+    except:
         conn.close()
-        raise RuntimeError("Connection with FK constraint cannot be established.")
-    conn.autocommit = False 
     return conn 
 
 @contextmanager

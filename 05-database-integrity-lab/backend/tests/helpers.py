@@ -9,4 +9,4 @@ def insert_client(conn, name, modified_by="Test User"):
 def committed_names(db_path):
     """Read through a separate unit of work, so it shows only what was committed."""
     with unit_of_work(db_path) as conn:
-        return [[row[0] for row in conn.execute("SELECT name FROM clients ORDER BY id")]]
+        return [row[0] for row in conn.execute("SELECT name FROM clients ORDER BY id")]

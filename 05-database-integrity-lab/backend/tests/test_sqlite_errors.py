@@ -11,7 +11,7 @@ def test_duplicate_is_unique_and_rolls_back_whole_unit(db_path):
             insert_client(conn, "Farm A")
             insert_client(conn, "FARM     a")
     assert translate_sqlite_error(exc_info.value) == DBErrorKind.UNIQUE 
-    assert committed_names(db_path) == [[]]
+    assert committed_names(db_path) == []
 
 def test_non_sqlite_error_is_unrecognized():
     assert translate_sqlite_error(ValueError("x")) == DBErrorKind.UNRECOGNIZED
@@ -23,18 +23,29 @@ def test_lock_contention_is_busy(db_path):
             with unit_of_work(db_path, timeout=0.1) as second:
                 insert_client(second, "Farm B")
     assert translate_sqlite_error(exc_info.value) == DBErrorKind.BUSY
-    assert committed_names(db_path) == [[]]
+    assert committed_names(db_path) == []
 
 def test_not_null(db_path):
     with pytest.raises(sqlite3.IntegrityError) as exc_info:
         with unit_of_work(db_path) as conn:
             conn.execute("INSERT INTO clients (name, modified_by) VALUES (?, ?)", ("Farm D", "Test User"))
     assert translate_sqlite_error(exc_info.value) == DBErrorKind.NOT_NULL
-    assert committed_names(db_path) == [[]]
+    assert committed_names(db_path) == []
 
 def test_fk_delete_reference(db_path):
-    pass 
+    with pytest.raises(sqlite3.IntegrityError) as exc_info:
+        with unit_of_work(db_path) as conn:
+            insert_client(conn, "Farm A")
+            conn.execute("INSERT INTO client_note (client_id, note) VALUES (?, ?)", (1, "Test Note"))
+            conn.execute("DELETE FROM clients WHERE id=1")
+    assert translate_sqlite_error(exc_info.value) == DBErrorKind.FOREIGN_KEY
+    assert committed_names(db_path) == []
 
 def test_fk_insert_orphan(db_path):
-    pass
+    with pytest.raises(sqlite3.IntegrityError) as exc_info:
+        with unit_of_work(db_path) as conn:
+            insert_client(conn, "Farm A")
+            conn.execute("INSERT INTO client_note (client_id, note) VALUES (?, ?)", (999, "Client doesn't exist"))
+    assert translate_sqlite_error(exc_info.value) == DBErrorKind.FOREIGN_KEY
+    assert committed_names(db_path) == []
 
