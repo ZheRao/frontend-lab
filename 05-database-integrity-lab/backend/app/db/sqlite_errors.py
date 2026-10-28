@@ -1,5 +1,5 @@
 import sqlite3
-from app.db.errors import DBErrorKind
+from app.conventions import DBErrorKind
 
 def translate_sqlite_error(err: BaseException) -> DBErrorKind:
     """

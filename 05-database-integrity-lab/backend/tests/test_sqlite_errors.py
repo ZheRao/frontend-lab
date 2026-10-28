@@ -1,6 +1,6 @@
 import sqlite3 
 import pytest 
-from app.db.errors import DBErrorKind
+from app.conventions import DBErrorKind
 from app.db.sqlite_connection import unit_of_work
 from app.db.sqlite_errors import translate_sqlite_error
 from tests.helpers import insert_client, committed_names 
