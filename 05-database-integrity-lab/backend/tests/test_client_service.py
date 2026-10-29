@@ -2,7 +2,7 @@ import sqlite3
 import pytest 
 
 from app.conventions import BackendKeys, OutcomeKind
-from app.services.client_service import client_list, append_client, modify_client
+from app.services.client_service import client_list, append_client, modify_client, remove_client
 from tests.helpers import committed_names
 
 from app.db.sqlite_connection import unit_of_work
@@ -162,3 +162,68 @@ def test_whitespace_only_name_is_rejected_modify(db_path, blank):
     assert RESULT not in result 
     assert result[OUTCOME] == OutcomeKind.INVALID_NAME
     assert committed_names(db_path) == ["Farm A"]
+
+
+#   --- delete_client: success  -----------------------------------------
+def test_delete_existing_client(db_path):
+    result = append_client(db_path, "Farm A")
+    append_client(db_path, "Farm B")
+    client = result[RESULT]
+    result_delete = remove_client(db_path, client["id"])
+    assert result_delete[OUTCOME] == OutcomeKind.DELETED
+    deleted_client = result_delete[RESULT]
+    assert deleted_client["id"] == client["id"]
+    assert committed_names(db_path) == ["Farm B"]
+
+def test_deleted_id_not_reused_and_have_increment_id(db_path):
+    append_client(db_path, "Farm A")
+    result = append_client(db_path, "Farm B")
+    result_delete = remove_client(db_path, result[RESULT]["id"])
+    result_append_after_delete = append_client(db_path, "Farm B")
+    assert result_append_after_delete[RESULT]["id"] > result_delete[RESULT]["id"]
+    assert committed_names(db_path) == ["Farm A", "Farm B"]
+
+#   --- delete_client: failures -------------------------------------------
+def test_delete_non_existing_client(db_path):
+    append_client(db_path, "Farm A")
+    result_delete = remove_client(db_path, 999)
+    assert result_delete[OUTCOME] == OutcomeKind.NOT_FOUND
+    assert RESULT not in result_delete
+    assert committed_names(db_path) == ["Farm A"]
+
+
+def test_busy_database_delete(db_path, monkeypatch):
+    monkeypatch.setattr("app.db.sqlite_connection.BUSY_TIMEOUT", 0.1)
+    old_result = append_client(db_path, "Farm A")
+    blocker = sqlite3.connect(db_path, autocommit=False)
+    try:
+        blocker.execute("INSERT INTO clients (name, name_standardized, modified_by) VALUES (?, ?, ?)", ("test", "test", "test"))
+        result = remove_client(db_path, old_result[RESULT]["id"])
+        assert result[OUTCOME] == OutcomeKind.DATABASE_BUSY
+        assert RESULT not in result 
+    finally:
+        blocker.rollback()
+        blocker.close()
+    assert committed_names(db_path) == ["Farm A"]
+
+def test_database_error_is_unknown_delete(db_without_schema):
+    result = remove_client(db_without_schema, 999)
+    assert result[OUTCOME] == OutcomeKind.UNKNOWN
+    assert RESULT not in result
+
+def test_delete_referenced_client(db_path):
+    result = append_client(db_path, "Farm A")
+    append_client(db_path, "Farm B")
+    client = result[RESULT]
+    with unit_of_work(db_path) as conn:
+        conn.execute(
+            """
+            INSERT INTO client_note (client_id, note)
+            VALUES (?, ?)
+            """,
+            (client["id"], "test")
+        )
+    result_delete = remove_client(db_path, client["id"])
+    assert RESULT not in result_delete
+    assert result_delete[OUTCOME] == OutcomeKind.REFERENCED
+    assert committed_names(db_path) == ["Farm A", "Farm B"]

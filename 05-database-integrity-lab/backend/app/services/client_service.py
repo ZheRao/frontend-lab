@@ -104,3 +104,39 @@ def modify_client(db_path: str, client_id: int, name: str, modified_by: str = "T
         return {
             BackendKeys.OUTCOME: OutcomeKind.UNKNOWN
         }
+
+def remove_client(db_path: str, client_id: int) -> dict[str, dict[str,int]|str]:
+    try:
+        with unit_of_work(db_path) as conn:
+            cur = conn.execute(
+                """
+                DELETE FROM clients
+                WHERE id = ?
+                RETURNING id
+                """,
+                (client_id, )
+            )
+            cols = [c[0] for c in cur.description]
+            rows = cur.fetchall()
+        if not rows:
+            return {
+                BackendKeys.OUTCOME: OutcomeKind.NOT_FOUND
+            }
+        else:
+            return {
+                BackendKeys.OUTCOME: OutcomeKind.DELETED,
+                BackendKeys.RESULT: dict(zip(cols, rows[0]))
+            }
+    except Exception as err:
+        kind = translate_sqlite_error(err)
+        if kind == DBErrorKind.FOREIGN_KEY:
+            return {
+                BackendKeys.OUTCOME: OutcomeKind.REFERENCED
+            }
+        elif kind == DBErrorKind.BUSY:
+            return {
+                BackendKeys.OUTCOME: OutcomeKind.DATABASE_BUSY
+            }
+        return {
+            BackendKeys.OUTCOME: OutcomeKind.UNKNOWN
+        }
