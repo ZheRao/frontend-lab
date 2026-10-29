@@ -5,6 +5,8 @@ from app.conventions import BackendKeys, OutcomeKind
 from app.services.client_service import client_list, append_client, modify_client
 from tests.helpers import committed_names
 
+from app.db.sqlite_connection import unit_of_work
+
 OUTCOME, RESULT = BackendKeys.OUTCOME, BackendKeys.RESULT
 
 #   --- client list ----------------------------------
@@ -52,7 +54,7 @@ def test_normalized_duplicate_keep_original(db_path):
     assert committed_names(db_path) == ["Farm A"]
 
 @pytest.mark.parametrize("blank", ["", "    ", "\t\n "])
-def test_whitespace_only_name_is_rejected(db_path, blank):
+def test_whitespace_only_name_is_rejected_append(db_path, blank):
     result = append_client(db_path, blank)
     assert result[OUTCOME] == OutcomeKind.INVALID_NAME
     assert committed_names(db_path) == []
@@ -64,12 +66,12 @@ def db_without_schema(tmp_path):
     """A valid database file with no tables, so every statement fails."""
     return str(tmp_path / "empty.db")
 
-def test_database_error_is_unknown(db_without_schema):
+def test_database_error_is_unknown_append(db_without_schema):
     result = append_client(db_without_schema, "Farm A")
     assert result[OUTCOME] == OutcomeKind.UNKNOWN
     assert RESULT not in result
 
-def test_busy_database(db_path, monkeypatch):
+def test_busy_database_append(db_path, monkeypatch):
     monkeypatch.setattr("app.db.sqlite_connection.BUSY_TIMEOUT", 0.1)
 
     blocker = sqlite3.connect(db_path, autocommit=False)
@@ -99,6 +101,17 @@ def test_rename_existing_client(db_path):
     assert client["modified_by"] == "Test User 2"
     assert committed_names(db_path) == ["Farm Z"]
 
+def test_rename_changes_standardized_key(db_path):
+    result = append_client(db_path, "Farm A")
+    client_id = result[RESULT]["id"]
+    with unit_of_work(db_path) as conn:
+        old_key = conn.execute("SELECT name_standardized FROM clients WHERE id = ?", (client_id,)).fetchone()[0]
+    result_updated = modify_client(db_path, client_id, "Farm Z")
+    with unit_of_work(db_path) as conn:
+        new_key = conn.execute("SELECT name_standardized FROM clients WHERE id = ?", (client_id,)).fetchone()[0]
+    assert old_key == "farm_a"
+    assert new_key == "farm_z"
+
 def test_rename_to_own_name_in_different_case(db_path):
     result = append_client(db_path, "Farm A", "Test User 1")
     result_updated = modify_client(db_path, result[RESULT]["id"], "FARM   A", "Test User 2")
@@ -122,7 +135,7 @@ def test_rename_to_other_clients_name_is_duplicate(db_path):
     assert result[OUTCOME] == OutcomeKind.DUPLICATED
     assert committed_names(db_path) == ["Farm A", "Farm B"]
 
-def test_busy_database(db_path, monkeypatch):
+def test_busy_database_modify(db_path, monkeypatch):
     monkeypatch.setattr("app.db.sqlite_connection.BUSY_TIMEOUT", 0.1)
     old_result = append_client(db_path, "Farm A")
     blocker = sqlite3.connect(db_path, autocommit=False)
@@ -136,9 +149,14 @@ def test_busy_database(db_path, monkeypatch):
         blocker.close()
     assert committed_names(db_path) == ["Farm A"]
 
+def test_database_error_is_unknown_modify(db_without_schema):
+    result = modify_client(db_without_schema, 999, "Farm A")
+    assert result[OUTCOME] == OutcomeKind.UNKNOWN
+    assert RESULT not in result
+
 #   --- modify_client: rejection    ----------------------------------
 @pytest.mark.parametrize("blank", ["", "    ", "\t\n "])
-def test_whitespace_only_name_is_rejected(db_path, blank):
+def test_whitespace_only_name_is_rejected_modify(db_path, blank):
     old_result = append_client(db_path, "Farm A")
     result = modify_client(db_path,old_result[RESULT]["id"], blank)
     assert RESULT not in result 
