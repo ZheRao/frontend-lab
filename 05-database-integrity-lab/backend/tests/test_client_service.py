@@ -2,7 +2,7 @@ import sqlite3
 import pytest 
 
 from app.conventions import BackendKeys, OutcomeKind
-from app.services.client_service import client_list, append_client 
+from app.services.client_service import client_list, append_client, modify_client
 from tests.helpers import committed_names
 
 OUTCOME, RESULT = BackendKeys.OUTCOME, BackendKeys.RESULT
@@ -38,6 +38,10 @@ def test_two_distinct_clients(db_path):
     second = append_client(db_path, "Farm B", "Test User")[RESULT]
     assert first["id"] != second["id"]
     assert committed_names(db_path) == ["Farm A", "Farm B"]
+
+def test_name_strip(db_path):
+    result = append_client(db_path, "   Farm  A    ", "Test User")
+    assert committed_names(db_path) == ["Farm  A"]
 
 #   --- append_client: rejections   ------------------------
 
@@ -82,4 +86,61 @@ def test_busy_database(db_path, monkeypatch):
         blocker.close()
 
     assert committed_names(db_path) == []
-        
+
+#   --- modify_client: success  ---------------------------------------
+def test_rename_existing_client(db_path):
+    result = append_client(db_path, "Farm A", "Test User 1")
+    old_client = result[RESULT]
+    result_update = modify_client(db_path, old_client["id"], "Farm Z", "Test User 2")
+    assert result_update[OUTCOME] == OutcomeKind.UPDATED 
+    client = result_update[RESULT]
+    assert client["id"] == old_client["id"]
+    assert client["name"] == "Farm Z"
+    assert client["modified_by"] == "Test User 2"
+    assert committed_names(db_path) == ["Farm Z"]
+
+def test_rename_to_own_name_in_different_case(db_path):
+    result = append_client(db_path, "Farm A", "Test User 1")
+    result_updated = modify_client(db_path, result[RESULT]["id"], "FARM   A", "Test User 2")
+    assert committed_names(db_path) == ["FARM   A"]
+    assert result_updated[OUTCOME] == OutcomeKind.UPDATED 
+
+#   --- modify_client: failures  ---------------------------------------
+
+def test_nonexistent_id_is_not_found(db_path):
+    append_client(db_path, "Farm A", "Test User")
+    result = modify_client(db_path, 999, "Farm Not Exist", "Test User")
+    assert result[OUTCOME] == OutcomeKind.NOT_FOUND
+    assert RESULT not in result 
+    assert committed_names(db_path) == ["Farm A"]
+
+def test_rename_to_other_clients_name_is_duplicate(db_path):
+    append_client(db_path, "Farm A", "Test User")
+    old_result = append_client(db_path, "Farm B", "Test User")
+    result = modify_client(db_path, old_result[RESULT]["id"], "FARM   A", "Test User")
+    assert RESULT not in result 
+    assert result[OUTCOME] == OutcomeKind.DUPLICATED
+    assert committed_names(db_path) == ["Farm A", "Farm B"]
+
+def test_busy_database(db_path, monkeypatch):
+    monkeypatch.setattr("app.db.sqlite_connection.BUSY_TIMEOUT", 0.1)
+    old_result = append_client(db_path, "Farm A")
+    blocker = sqlite3.connect(db_path, autocommit=False)
+    try:
+        blocker.execute("INSERT INTO clients (name, name_standardized, modified_by) VALUES (?, ?, ?)", ("test", "test", "test"))
+        result = modify_client(db_path, old_result[RESULT]["id"], "test2", "test2")
+        assert result[OUTCOME] == OutcomeKind.DATABASE_BUSY
+        assert RESULT not in result 
+    finally:
+        blocker.rollback()
+        blocker.close()
+    assert committed_names(db_path) == ["Farm A"]
+
+#   --- modify_client: rejection    ----------------------------------
+@pytest.mark.parametrize("blank", ["", "    ", "\t\n "])
+def test_whitespace_only_name_is_rejected(db_path, blank):
+    old_result = append_client(db_path, "Farm A")
+    result = modify_client(db_path,old_result[RESULT]["id"], blank)
+    assert RESULT not in result 
+    assert result[OUTCOME] == OutcomeKind.INVALID_NAME
+    assert committed_names(db_path) == ["Farm A"]
