@@ -61,11 +61,6 @@ def test_whitespace_only_name_is_rejected_append(db_path, blank):
 
 
 #   --- append_client: failures --------------------------------
-@pytest.fixture 
-def db_without_schema(tmp_path):
-    """A valid database file with no tables, so every statement fails."""
-    return str(tmp_path / "empty.db")
-
 def test_database_error_is_unknown_append(db_without_schema):
     result = append_client(db_without_schema, "Farm A")
     assert result[OUTCOME] == OutcomeKind.UNKNOWN
