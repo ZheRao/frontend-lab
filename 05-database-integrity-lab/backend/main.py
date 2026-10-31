@@ -4,10 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from app.services.client_service import append_client, client_list, modify_client, remove_client
-from app.config import DB_NAME
+from app.config import DB_PATH
 from app.conventions import OutcomeKind, BackendKeys
-
-DB_PATH = f"./{DB_NAME}"
 
 OUTCOME = BackendKeys.OUTCOME
 RESULT = BackendKeys.RESULT

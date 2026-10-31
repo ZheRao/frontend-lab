@@ -3,11 +3,13 @@ from app.db.sqlite_connection import unit_of_work
 from app.db.sqlite_errors import translate_sqlite_error # SQLite-specific
 from app.services.naming import string_normalize
 
+import time
+
 def client_list(db_path:str) -> dict[str,list[dict[str,str|int]]|str]:
     query = """
         SELECT id, name, modified_by
         FROM clients
-        ORDER BY id
+        ORDER BY name
     """
     try:
         with unit_of_work(db_path) as conn:
@@ -37,6 +39,7 @@ def append_client(db_path:str, name: str, modified_by: str="TEST USER") -> dict[
         }
     try:
         with unit_of_work(db_path) as conn:
+            # time.sleep(5)
             sql = """
                 INSERT INTO clients (name, name_standardized, modified_by) 
                 VALUES (?, ?, ?)

@@ -86,7 +86,7 @@ function App() {
     if (request !== 'pending' || isLoading) return
     const timer = setTimeout(()=>{
       setIsWaitingLong(true)
-    }, 5000)
+    }, 2000)
     return () => clearTimeout(timer)
   }, [request, observationRound, isLoading])
 
@@ -117,7 +117,7 @@ function App() {
   }
 
   const dismissError = () => {
-    if (error?.type === 'validation') {
+    if (error?.code === 'INVALID_CLIENT_NAME') {
       setDraft((prev)=>({...prev, name: ''}))
     }
     setError(null)

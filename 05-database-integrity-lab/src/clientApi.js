@@ -16,13 +16,13 @@ export async function getClients() {
     try {
         const response = await fetch(`${baseURL}/clients`)
 
-        if (response.status !== 200) {
+        if (response.status !== 200 && response.status !== 503) {
             throw new Error("Unexpected GET status.")
         }
 
         const data = await response.json()
 
-        if (!Array.isArray(data) || !data.every(isValidClient)) {
+        if ((!Array.isArray(data) || !data.every(isValidClient)) && (response.status !== 503)) {
             throw new Error("Invalid client list response.")
         }
         return data
@@ -34,6 +34,7 @@ export async function getClients() {
             { cause: err }
         )
     }
+
 }
 
 export async function createClient(name) {
@@ -65,6 +66,19 @@ export async function createClient(name) {
             return data
         } else {
             throw unknownMutationOutcome()  // status code says CREATED, but JSON body is malformed
+        }
+    } else if (response.status === 503) {
+        console.log(data?.detail?.code)
+        console.log(typeof data?.detail?.message)
+        console.log(isValidErrorData(data, "SERVICE_BUSY"))
+        if (isValidErrorData(data, "SERVICE_BUSY")) {
+            throw new ApiError(
+                "non-retryable",
+                "SERVICE_BUSY",
+                data.detail.message
+            )
+        } else {
+            throw unknownMutationOutcome()
         }
     } else if (response.status === 422) {
         if (isValidErrorData(data, "INVALID_CLIENT_NAME")) {
@@ -121,7 +135,17 @@ export async function editClient(clientId, name) {
         } else {
             throw unknownMutationOutcome()
         }
-    } else if (response.status === 422) {
+    } else if (response.status === 503) {
+        if (isValidErrorData(data, "SERVICE_BUSY")) {
+            throw new ApiError(
+                "non-retryable",
+                "SERVICE_BUSY",
+                data.detail.message
+            )
+        } else {
+            throw unknownMutationOutcome()
+        }
+    }  else if (response.status === 422) {
         if (isValidErrorData(data, "INVALID_CLIENT_NAME")) {
             throw new ApiError(
                 "non-retryable",
@@ -197,7 +221,17 @@ export async function deleteClient(clientId) {
             } else {
                 throw unknownMutationOutcome()
             }
-        } else if (response.status === 404) {
+        } else if (response.status === 503) {
+        if (isValidErrorData(data, "SERVICE_BUSY")) {
+            throw new ApiError(
+                "non-retryable",
+                "SERVICE_BUSY",
+                data.detail.message
+            )
+        } else {
+            throw unknownMutationOutcome()
+        }
+    }  else if (response.status === 404) {
             if (isValidErrorData(data, "CLIENT_NOT_FOUND")) {
                 throw new ApiError(
                     "non-retryable",

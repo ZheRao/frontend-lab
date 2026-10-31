@@ -3,6 +3,8 @@ from contextlib import contextmanager
 
 from app.config import BUSY_TIMEOUT
 
+import time
+
 def get_connection(db_path: str, timeout: float|None = None) -> sqlite3.Connection:
     """
     Establish a connection, enable and verify foreign-key enforcement, return the configured connection
@@ -40,6 +42,7 @@ def unit_of_work(db_path: str, timeout: float|None = None):
 
     try:
         yield conn
+        # time.sleep(5)
         conn.commit()
     except BaseException:
         try:
