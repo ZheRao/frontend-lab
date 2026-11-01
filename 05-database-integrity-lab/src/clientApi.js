@@ -16,13 +16,13 @@ export async function getClients() {
     try {
         const response = await fetch(`${baseURL}/clients`)
 
-        if (response.status !== 200 && response.status !== 503) {
+        if (response.status !== 200) {
             throw new Error("Unexpected GET status.")
         }
 
         const data = await response.json()
 
-        if ((!Array.isArray(data) || !data.every(isValidClient)) && (response.status !== 503)) {
+        if (!Array.isArray(data) || !data.every(isValidClient)) {
             throw new Error("Invalid client list response.")
         }
         return data
@@ -58,9 +58,6 @@ export async function createClient(name) {
         throw unknownMutationOutcome(err)    // if either fetch or json parsing throws, unknown error, preserved 'Error.cause' for diagnostic reasons
     }
 
-    console.log("HTTP status: ", response.status)
-    console.log("Response body: ", data)
-
     if (response.status === 201) {
         if (isValidClient(data)) {
             return data
@@ -68,9 +65,6 @@ export async function createClient(name) {
             throw unknownMutationOutcome()  // status code says CREATED, but JSON body is malformed
         }
     } else if (response.status === 503) {
-        console.log(data?.detail?.code)
-        console.log(typeof data?.detail?.message)
-        console.log(isValidErrorData(data, "SERVICE_BUSY"))
         if (isValidErrorData(data, "SERVICE_BUSY")) {
             throw new ApiError(
                 "non-retryable",
@@ -125,9 +119,6 @@ export async function editClient(clientId, name) {
     } catch (err) {
         throw unknownMutationOutcome(err)
     }
-
-    console.log("HTTP status: ", response.status)
-    console.log("Response body: ", data)
 
     if (response.status === 200) {
         if (isValidClient(data) && data.id === clientId) {
@@ -198,8 +189,6 @@ export async function deleteClient(clientId) {
         throw unknownMutationOutcome(err)
     }
 
-    console.log("HTTP status: ", response.status)
-
     if (response.status === 204) {
         return
     } else {
@@ -208,8 +197,6 @@ export async function deleteClient(clientId) {
         } catch (err) {
             throw unknownMutationOutcome(err)
         }
-        
-        console.log("Response body: ", data)
 
         if (response.status === 409) {
             if (isValidErrorData(data, "CLIENT_REFERENCED")) {
