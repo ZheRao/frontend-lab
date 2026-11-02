@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from "vitest"
 import { createClient, getClients, editClient, deleteClient } from "./clientApi.js"
-import { ApiError } from "./ApiError.js"
+import { ApiError } from "../../ApiError.js"
 
 const CLIENTS_URL = "http://127.0.0.1:8000/clients"
 

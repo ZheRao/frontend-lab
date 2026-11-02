@@ -8,7 +8,8 @@ SCHEMA_SQL = (Path(__file__).resolve().parent / "app" / "db" / "schema.sql").rea
 
 def main():
     db_path = DB_PATH
-    if os.path.exists(db_path): os.remove(db_path)
+    for s in ("", "-wal", "-shm"):
+        if os.path.exists(db_path+s): os.remove(db_path+s)
     print("New database created at: ", db_path)
     conn = sqlite3.connect(str(db_path))
     conn.executescript(SCHEMA_SQL)
