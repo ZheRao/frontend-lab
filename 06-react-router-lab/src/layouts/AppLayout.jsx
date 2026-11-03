@@ -5,14 +5,11 @@ import { Outlet } from 'react-router'
 import './layouts.css'
 import Sidebar from "./Sidebar"
 
-function AppLayout({ onNavigate, currentPage, pages }) {
+function AppLayout() {
     const [collapsed, setCollapsed] = useState(false)
     return (
         <div className="app-layout">
-            <Sidebar 
-                onNavigate={onNavigate} 
-                currentPage={currentPage} 
-                pages={pages}
+            <Sidebar
                 collapsed={collapsed}
                 onCollapse={()=>setCollapsed(true)}
             />

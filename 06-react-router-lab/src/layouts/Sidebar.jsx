@@ -2,8 +2,9 @@
 
 import { NavLink } from 'react-router'
 import './layouts.css'
+import { navItems } from '../app/navigation';
 
-function Sidebar({ pages, collapsed, onCollapse }) {
+function Sidebar({ collapsed, onCollapse }) {
 
     return (
         <aside
@@ -27,9 +28,9 @@ function Sidebar({ pages, collapsed, onCollapse }) {
                 </div>
             
                 <nav>
-                    {pages.map((page)=>(
+                    {navItems.map((page)=>(
                         <NavLink 
-                            key={page.key}
+                            key={page.path}
                             to={page.path}
                             end={page.path === "/"}
                             className={({ isActive }) => isActive ? "page-active" : "regular-page-button"}
