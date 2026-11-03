@@ -1,8 +1,9 @@
 // layouts/Sidebar.jsx
 
+import { NavLink } from 'react-router'
 import './layouts.css'
 
-function Sidebar({ onNavigate, currentPage, pages, collapsed, onCollapse }) {
+function Sidebar({ pages, collapsed, onCollapse }) {
 
     return (
         <aside
@@ -27,15 +28,14 @@ function Sidebar({ onNavigate, currentPage, pages, collapsed, onCollapse }) {
             
                 <nav>
                     {pages.map((page)=>(
-                        <button 
+                        <NavLink 
                             key={page.key}
-                            type="button"
-                            onClick={()=>onNavigate(page.key)} 
-                            className={page.key === currentPage ? "page-active" : "regular-page-button"}
-                            aria-current={currentPage === page.key ? "page": undefined}
+                            to={page.path}
+                            end={page.path === "/"}
+                            className={({ isActive }) => isActive ? "page-active" : "regular-page-button"}
                         >
                             {page.label}
-                        </button>
+                        </NavLink>
                     ))}
                 </nav>
             </div>

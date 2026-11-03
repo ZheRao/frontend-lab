@@ -1,10 +1,11 @@
 // layouts/AppLayout.jsx
 
 import { useState } from 'react'
+import { Outlet } from 'react-router'
 import './layouts.css'
-import Sidebar from "./Sidebar";
+import Sidebar from "./Sidebar"
 
-function AppLayout({ children, onNavigate, currentPage, pages }) {
+function AppLayout({ onNavigate, currentPage, pages }) {
     const [collapsed, setCollapsed] = useState(false)
     return (
         <div className="app-layout">
@@ -30,7 +31,7 @@ function AppLayout({ children, onNavigate, currentPage, pages }) {
                     </button>
                 )}
 
-                {children}
+                <Outlet />
             </main>
         </div>
     )
