@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 
-import '../../App.css'
+import './ClientManagement.css'
 import ClientList from './ClientList.jsx'
 import {
   DeleteClientModal,

@@ -1,0 +1,34 @@
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 240px;
+    flex-shrink: 0;
+    overflow: hidden;
+    visibility: visible;
+    transition: width 200ms ease, visibility 0s linear 0s;
+}
+
+.sidebar.collapsed {
+    width: 0;
+    visibility: hidden;
+    transition: width 200ms ease, visibility 0s linear 200ms;
+}
+
+.sidebar-inner {
+    width: 240px;
+    box-sizing: border-box;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.app-content {
+    flex: 1;
+    min-width: 0;
+}
