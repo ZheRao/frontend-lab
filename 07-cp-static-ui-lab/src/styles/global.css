@@ -1,0 +1,140 @@
+
+/* =========================================================
+   2. BASE
+   ========================================================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+}
+
+/* Spacing comes from `gap`, never from default margins */
+h1, h2, h3, h4, p {
+  margin: 0;
+}
+
+/* =========================================================
+   PAGE CONTAINER
+   ========================================================= */
+/* page container: centered column every page sits in */
+.page {
+    max-width: 960px;
+    margin: 24px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+
+/* =========================================================
+   3. LAYOUT PRIMITIVES
+   ========================================================= */
+/* Row: content left, actions right */
+.row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Stack: vertical, small gap */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+/* Action group: buttons side by side */
+.actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+
+/* =========================================================
+   5. BUTTONS — one base + variants, used everywhere
+      <button className="btn btn-primary">
+   ========================================================= */
+.btn {
+  padding: 8px 14px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text);
+  background: transparent;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
+}
+
+.btn:hover {
+  background: var(--surface-button);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+/* Main positive action (Save, Add) */
+.btn-primary {
+  color: var(--text-on-light);
+  background: var(--light);
+  border-color: var(--light);
+}
+.btn-primary:hover {
+  background: #d6d6d6;
+  border-color: #d6d6d6;
+}
+
+/* Safe / dismissive action (Cancel, Rename on rows): use `btn btn-secondary`.
+   No rule needed — .btn alone is already the outlined style. The class stays
+   in the markup to state intent and as a hook if it ever needs to differ. */
+
+/* Destructive action (Delete) */
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+}
+.btn-danger:hover {
+  background: var(--danger-hover);
+  border-color: var(--danger-hover);
+}
+
+/* Solid neutral (Close on the error dialog) */
+.btn-neutral {
+  background: var(--surface-button);
+  border-color: var(--surface-button);
+}
+.btn-neutral:hover {
+  background: #262626;
+}
+
+
+/* =========================================================
+   8. ICONS
+   ========================================================= */
+.icon {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+
+.icon-danger {
+  color: var(--danger);           /* svg uses currentColor */
+}
