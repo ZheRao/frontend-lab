@@ -4,8 +4,6 @@
    4. PAGE: card, header, pill, list
    ========================================================= */
 .client-panel {
-  max-width: 770px;
-  margin: 24px auto;
   padding: 20px 24px 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);

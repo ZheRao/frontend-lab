@@ -4,7 +4,9 @@ import ClientManagement from "../features/clients/ClientManagement";
 
 function ClientPage(){
     return (
-        <ClientManagement />
+        <div className="page">
+            <ClientManagement />
+        </div>
     )
 }
 

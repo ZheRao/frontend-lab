@@ -1,26 +1,11 @@
 /* =========================================================
    HOME PAGE
    ========================================================= */
-.home-page {
-    max-width: 770px;
-    margin: 24px auto;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-}
 
 .home-header {
     display: flex;
     flex-direction: column;
     gap: 8px;
-}
-
-.home-eyebrow {
-    font-size: var(--fs-xs);
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-faint);
 }
 
 .home-title {

@@ -21,6 +21,19 @@ h1, h2, h3, h4, p {
 }
 
 /* =========================================================
+   PAGE CONTAINER
+   ========================================================= */
+/* page container: centered column every page sits in */
+.page {
+    max-width: 960px;
+    margin: 24px auto;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+
+/* =========================================================
    3. LAYOUT PRIMITIVES
    ========================================================= */
 /* Row: content left, actions right */
@@ -62,6 +75,11 @@ h1, h2, h3, h4, p {
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-control);
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  text-decoration: none;
 }
 
 .btn:hover {

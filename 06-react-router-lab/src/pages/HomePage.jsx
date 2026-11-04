@@ -8,9 +8,8 @@ import './HomePage.css'
 function HomePage() {
     const cardItems = navItems.filter((page)=>page.homeCard !== null)
     return (
-        <section className="home-page">
+        <section className="page">
             <header className="home-header">
-                {/* <p className="home-eyebrow">Forecast Platform Configuration</p> */}
                 <h1 className="home-title">Welcome</h1>
                 <p className="home-lead">
                     Manage clients and configure inputs for the forecast system.

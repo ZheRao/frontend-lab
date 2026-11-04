@@ -39,7 +39,7 @@ def append_client(db_path:str, name: str, modified_by: str="TEST USER") -> dict[
         }
     try:
         with unit_of_work(db_path) as conn:
-            # time.sleep(5)
+            time.sleep(5)
             sql = """
                 INSERT INTO clients (name, name_standardized, modified_by) 
                 VALUES (?, ?, ?)
