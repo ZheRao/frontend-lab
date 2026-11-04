@@ -331,11 +331,11 @@ function ClientManagement() {
   
 
   return (
-    <section className="card">
+    <section className="client-panel">
       <header className="row">
         <div className="stack">
-          <h2 className="title">CLIENTS</h2>
-          <p className="subtitle">GrowLytics Management Portal</p>
+          <h2 className="client-panel-title">Clients</h2>
+          <p className="client-panel-subtitle">Manage client records</p>
         </div>
         <button className="btn btn-primary"
           onClick={enterAdd}
@@ -344,7 +344,7 @@ function ClientManagement() {
         </button>
       </header>
 
-      <div className="pill" aria-hidden="true" />
+      <div className="client-pill" aria-hidden="true" />
 
       {isLoading ? (
         <PendingDialog open={isLoading} label="Loading Clients..." />

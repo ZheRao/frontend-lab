@@ -1,0 +1,50 @@
+/* =========================================================
+   1. TOKENS — every colour, radius and size lives here once.
+      Change a value here and every component follows.
+   ========================================================= */
+:root {
+  /* surfaces */
+  --bg: #000;
+  --surface-sunken: #0d0d0d;     /* inputs, highlighted boxes */
+  --surface-raised: #2e2e2e;     /* error dialog */
+  --surface-button: #1f1f1f;
+
+  /* lines */
+  --border: #2a2a2a;
+  --border-strong: #333;
+  --border-raised: #3a3a3a;
+  --border-danger: #3a2224;
+  --divider: #1f1f1f;
+
+  /* text */
+  --text: #fff;
+  --text-muted: #cfcfcf;
+  --text-faint: #a8a8a8;
+  --text-on-light: #000;
+
+  /* accents */
+  --light: #ececec;              /* pill, primary button */
+  --danger: #e5484d;
+  --danger-hover: #cf3d42;
+
+  /* shape */
+  --radius-card: 12px;
+  --radius-control: 8px;
+  --radius-pill: 999px;
+
+  /* type scale */
+  --fs-xs: 0.75rem;              /* 12px */
+  --fs-sm: 0.8125rem;            /* 13px */
+  --fs-md: 0.9375rem;            /* 15px */
+  --fs-lg: 1.125rem;             /* 18px */
+  --fs-xl: 1.375rem;             /* 22px */
+  --fs-2xl: 1.75rem;             /* 28 px - Home and 404 headings later */
+
+  /* layout */
+  --sidebar-width: 272px;
+
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --success: #3dd68c;
+  --info: #4ea1ff;
+}

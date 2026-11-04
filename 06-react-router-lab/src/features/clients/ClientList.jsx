@@ -2,7 +2,7 @@ import ClientRow from './ClientRow.jsx'
 
 function ClientList({ clients, onEdit, onDelete }) {
     return (
-        <ul className="list">
+        <ul className="client-list">
             {clients.map(
                 (client) => (
                     <ClientRow 

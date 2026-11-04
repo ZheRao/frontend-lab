@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Outlet } from 'react-router'
+import {PanelLeftOpen } from 'lucide-react'
 import './layouts.css'
 import Sidebar from "./Sidebar"
 
@@ -18,13 +19,13 @@ function AppLayout() {
                 {collapsed && (
                     <button 
                         type="button"
-                        className="sidebar-expand-button"
+                        className="sidebar-icon-button sidebar-expand-button"
                         onClick={()=>setCollapsed(false)}
                         aria-label="Expand sidebar"
                         aria-expanded={false}
                         aria-controls="app-sidebar"
                     >
-                        »
+                        <PanelLeftOpen className="icon" aria-hidden="true" />
                     </button>
                 )}
 

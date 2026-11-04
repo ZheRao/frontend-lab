@@ -4,7 +4,7 @@ import { Routes, Route } from 'react-router'
 import AppLayout from "./layouts/AppLayout"
 import ClientPage from './pages/ClientPage'
 import HomePage from "./pages/HomePage"
-import DefaultPage from "./pages/DefaultPage"
+import NotFoundPage from './pages/NotFoundPage'
 import CropPlanPage from './pages/CropPlanPage'
 
 function App(){
@@ -15,7 +15,7 @@ function App(){
         <Route index element={<HomePage />} />
         <Route path="clients" element={<ClientPage />} />
         <Route path="crop-plans" element={<CropPlanPage />} />
-        <Route path="*" element={<DefaultPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>
   )
