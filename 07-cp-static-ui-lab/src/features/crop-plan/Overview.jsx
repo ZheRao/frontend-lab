@@ -39,7 +39,8 @@ function Overview() {
     })
 
     const data = rawData.filter((row) => (row.clientId === Number(clientId) && row.forecastYear === Number(forecastYear)))
-    resolver(data, 2, revisions, categories)
+    const resolvedData = currentUrlState !== 'valid' ? {} : resolver(data, Number(revisionId), revisions, categories)
+    console.log("resolved data: ", resolvedData)
     const sortedRevisions = [...revisions].sort((a,b )=> a.order - b.order)
     // helpers
     //  update URL parameter
@@ -101,13 +102,13 @@ function Overview() {
                 ) : (
                     <div>
                         <p>workspace selected: Client {clientId}, Year {forecastYear}</p>
-                        {data.length === 0 ? (
+                        {Object.keys(resolvedData).length === 0 ? (
                             <div>
                                 <p>Empty Crop Section</p>
                                 <button>{revisions.find((rev)=>(rev.order===1)).name}</button>
                             </div>
                         ) : (sortedRevisions.map((rev) => (
-                            <button key={rev.id}>
+                            <button key={rev.id} onClick={()=>updateContext("revision", rev.id)}>
                                 {rev.name}
                             </button>
                         )))}

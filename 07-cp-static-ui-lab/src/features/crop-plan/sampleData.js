@@ -27,11 +27,11 @@ export const categories = [
     { key: "acres", cropYear: "current", label: "Acres", unit: "ac" },
     { key: "unit_price", cropYear: "current", label: "Unit Price", unit: "$/bu" },
     { key: "yield", cropYear: "current", label: "Yield / Acre", unit: "bu/ac" },
-    { key: "chem_cost", cropYear: "current", label: "Chem Cost / Acre", unit: "$/ac" },
-    { key: "fert_cost", cropYear: "current", label: "Fert Cost / Acre", unit: "$/ac" },
-    { key: "fuel_cost", cropYear: "current", label: "Fuel Cost / Acre", unit: "$/ac" },
-    { key: "rent_cost", cropYear: "current", label: "Rent Cost / Acre", unit: "$/ac" },
-    { key: "seed_cost", cropYear: "current", label: "Seed Cost / Acre", unit: "$/ac" },
+    { key: "chem_cost", cropYear: "current", label: "Chem", unit: "$/ac" },
+    { key: "fert_cost", cropYear: "current", label: "Fert", unit: "$/ac" },
+    { key: "fuel_cost", cropYear: "current", label: "Fuel", unit: "$/ac" },
+    { key: "rent_cost", cropYear: "current", label: "Rent", unit: "$/ac" },
+    { key: "seed_cost", cropYear: "current", label: "Seed", unit: "$/ac" },
 ]
 
 
