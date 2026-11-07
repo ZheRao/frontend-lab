@@ -1,21 +1,48 @@
 // features/crop-plan/Overview.jsx
 
-import { useSearchParams, useNavigate } from 'react-router'
+import { useSearchParams, } from 'react-router'
 import { 
-    clients
+    clients,
+    revisions,
+    rawData,
+    categories
 } from './sampleData.js'
+
+import {
+    urlStates,
+    resolver
+} from './helpers.js'
+
 
 
 
 function Overview() {
-    const forecastYears = [ 2026, 2027, 2028, 2029 ]  // accepted limitation: hard coded forecast year, later maybe a separate year table?
+    const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
     const [searchParams, setSearchParams] = useSearchParams()
-
     // read URL state
-    const clientId = searchParams.get("client")
-    const forecastYear = searchParams.get("year")
+    const clientId = searchParams.get("client")         //  string, event.target.value is string, URL components get string, here extraction gets string
+    const forecastYear = searchParams.get("year")       //  string, event.target.value is string, URL components get string, here extraction gets string
+    const revisionId = searchParams.get("revision")     //  string, event.target.value is string, URL components get string, here extraction gets string
 
+    const extractIds = (list) => {
+        return list.map((item) => (item.id))
+    }
+    const validClientId = extractIds(clients)       // list of Numbers
+    const validRevisionId = extractIds(revisions)   // list of Numbers
+    const currentUrlState = urlStates({
+        rawClientId: clientId,
+        clientList: validClientId,
+        rawForecastYear: forecastYear,
+        yearList: forecastYears,
+        rawRevisionId: revisionId,
+        revisionList: validRevisionId
+    })
 
+    const data = rawData.filter((row) => (row.clientId === Number(clientId) && row.forecastYear === Number(forecastYear)))
+    resolver(data, 2, revisions, categories)
+    const sortedRevisions = [...revisions].sort((a,b )=> a.order - b.order)
+    // helpers
+    //  update URL parameter
     const updateContext = (key, value) => {
         const next = new URLSearchParams(searchParams)
 
@@ -47,7 +74,7 @@ function Overview() {
                     {clients.map((client) => (
                         <option 
                             key={client.id}
-                            value={client.id}
+                            value={String(client.id)}
                         >
                             {client.name}
                         </option>
@@ -67,10 +94,24 @@ function Overview() {
                 </select>
             </div>
             
-            {!clientId || !forecastYear ? (
+            {currentUrlState === 'partial' ? (
                     <p>Select a client and a forecast year to begin.</p>
+                ) : currentUrlState === 'invalid' ? (
+                    <p>Invalid client, year, or revision</p>
                 ) : (
-                    <p>workspace selected: Client {clientId}, Year {forecastYear}</p>
+                    <div>
+                        <p>workspace selected: Client {clientId}, Year {forecastYear}</p>
+                        {data.length === 0 ? (
+                            <div>
+                                <p>Empty Crop Section</p>
+                                <button>{revisions.find((rev)=>(rev.order===1)).name}</button>
+                            </div>
+                        ) : (sortedRevisions.map((rev) => (
+                            <button key={rev.id}>
+                                {rev.name}
+                            </button>
+                        )))}
+                    </div>
                 )
             }
         </div>
