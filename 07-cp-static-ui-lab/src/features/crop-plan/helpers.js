@@ -52,26 +52,11 @@ function filterRawDataOnRevision (rawData, targetRevisionOrder, revisions, categ
     return categoryMerged
 }
 
-const cardGroups = [
-    { label: "Plant · Current Year", keys: ["acres", "unit_price", "yield"] },
-    { label: "Inflow · Prior Year", keys: ["prior.quantity_inventory", "prior.unit_price"] },
-    { label: "Outflow · Current Year Costs", keys: ["chem_cost", "fert_cost", "fuel_cost", "rent_cost", "seed_cost"]}
-]
-
-const resolveGrouping = () => {
-    const groupFlat = cardGroups.flatMap(group => (
-        group.keys.map(key => ({
-            key: key,
-            label: group.label
-        }))
-    ))
-    const groupLookUp = new Map(groupFlat.map(group => [group.key, group.label]))
-    return groupLookUp
-}
 
 export function resolver(rawData, targetRevision, revisions, categories) {
     if (rawData.length === 0) return {}   //safeguard against empty raw data due to filtering
-    const targetRevisionOrder = revisions.find(revision => (revision.id === targetRevision)).order
+    const targetRevisionOrder = revisions.find(revision => (revision.id === targetRevision))?.order
+    if (targetRevisionOrder === undefined) return {} //safeguard against invalid revisions
     const processedData = filterRawDataOnRevision(rawData, targetRevisionOrder, revisions, categories)
     const resolvedData = {}
     for (const data of processedData) {

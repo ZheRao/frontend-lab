@@ -13,7 +13,11 @@ import {
     resolver
 } from './helpers.js'
 
-
+const cardGroups = [
+    { label: "Plant · Current Year", keys: ["acres", "unit_price", "yield"] },
+    { label: "Inflow · Prior Year", keys: ["prior.quantity_inventory", "prior.unit_price"] },
+    { label: "Outflow · Current Year Costs", keys: ["chem_cost", "fert_cost", "fuel_cost", "rent_cost", "seed_cost"]}
+]
 
 
 function Overview() {
