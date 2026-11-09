@@ -66,6 +66,10 @@ function Overview() {
 
         setSearchParams(next)
     }
+
+    const handleFieldSelect = (cropId, categoryKey) => {
+        console.log("open field", cropId, categoryKey)
+    }
     
 
     return (
@@ -120,7 +124,7 @@ function Overview() {
                                 <span className="control__label" id="revision-label">Revision</span>
                                 <p className="legend">
                                     <span className="indicator indicator--local" aria-hidden="true" /> Saved in this revision
-                                    <span className="indicator indicator--inherited" aria-bidden="true" /> Inherited
+                                    <span className="indicator indicator--inherited" aria-hidden="true" /> Inherited
                                 </p>
                             </div>
                             <div className="revision-group" role="group" aria-labelledby='revision-label'>
@@ -165,7 +169,7 @@ function Overview() {
                                 <div className="crops__list">
                                     {Object.entries(resolvedData).map(([cropId, fields]) => {
                                         const crop = crops.find((crop) => crop.id === Number(cropId))
-                                        return <CropCard key={cropId} crop={crop} fields={fields} categories={categories} />
+                                        return <CropCard key={cropId} crop={crop} fields={fields} categories={categories} onFieldSelect={handleFieldSelect} />
                                     })}
                                 </div>
                                 

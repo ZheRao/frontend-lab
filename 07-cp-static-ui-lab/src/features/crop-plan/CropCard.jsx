@@ -8,9 +8,9 @@ import { Link, useSearchParams } from 'react-router'
 import { ChevronRight } from 'lucide-react'
 
 import { cardGroups } from "./sampleData"
-import { formatValue } from "./helpers"
+import CropField from './CropField'
 
-function CropCard ({ crop, fields, categories }) {
+function CropCard ({ crop, fields, categories, onFieldSelect }) {
 
     const [searchParams] = useSearchParams()
 
@@ -18,12 +18,12 @@ function CropCard ({ crop, fields, categories }) {
         <section className="crop-card">
             <header className="crop-card__header">
                 <h3 className="crop-card__name">{crop.name}</h3>
-                <Link
+                {/* <Link
                     className="crop-card__edit"
                     to={{ pathname: `/crop-plans/${crop.id}`, search: searchParams.toString() }}
                 >
                     Edit inputs <ChevronRight size={16} aria-hidden="true" />
-                </Link>
+                </Link> */}
             </header>
 
             {cardGroups.map((group) => (
@@ -34,23 +34,13 @@ function CropCard ({ crop, fields, categories }) {
                             const catInfo = categories.find((category) => category.key === cat)
                             const fieldInfo = fields[cat] 
                             return (
-                                <div key={cat} className="field">
-                                    <p className="field__label">
-                                        {catInfo.label}
-                                        {fieldInfo && (
-                                            <span
-                                                className={fieldInfo.isInherited ? "indicator indicator--inherited" : "indicator indicator--local"}
-                                                role="img"
-                                                aria-label={fieldInfo.isInherited ? "Inherited": "Saved in this revision"}    
-                                            />
-                                        )}
-                                    </p>
-
-                                    <p className={fieldInfo ? "field__value" : "field__value field__value--missing"}>
-                                        {fieldInfo ? formatValue(fieldInfo.value) : "—"}
-                                        {fieldInfo && <span className="field__unit">{catInfo.unit}</span>}
-                                    </p>
-                                </div>
+                                <CropField 
+                                    key={cat}
+                                    label={catInfo.label}
+                                    unit={catInfo.unit}
+                                    field={fieldInfo}
+                                    onSelect={() => onFieldSelect(crop.id, cat)}
+                                />
                             )
                         })}
                     </div>

@@ -30,13 +30,13 @@ describe("catalog consistency", () => {
         expect(allKeys.length).toEqual(uniqueKeys.size)
     })
 
-    test("a key starts with prior, if and only if its cropYear is prior", () => {
-        const priorRecords = categories.filter((cat) => (cat.key.startsWith("prior")))
-        const recordYears = priorRecords.map((record)=>(record.cropYear))
-        const uniqueYear = new Set(recordYears)
-        expect(uniqueYear.has("prior")).toBe(true)
-        expect(uniqueYear.size).toBe(1)
+    test("prior key prefix matches cropYear", () => {
+        for (const category of categories) {
+            expect(category.key.startsWith("prior."))
+                .toBe(category.cropYear === "prior")
+        }
     })
+
 
     test("IDs are unique in crops, revisions", () => {
         const checkIdUniqueness = (records) => {

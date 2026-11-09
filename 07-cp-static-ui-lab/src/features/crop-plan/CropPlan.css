@@ -214,17 +214,45 @@
   gap: 12px 24px;
 }
 
+/* A button that doesn't look like one */
+
+.field {
+  appearance: none;
+  display: block;
+  width: 100%;
+  margin: -8px -10px;   /* extend the hover area without shifting the text */
+  padding: 8px 10px;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-control);
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  position: relative;
+}
+
+.field:hover{
+  background: var(--surface-button);
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 0;
+}
+
 .field__label {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin: 0 0 4px;
+  margin-bottom: 4px;
   font-size: var(--fs-xs);
   color: var(--text-faint);
+  white-space: nowrap;
 }
 
 .field__value {
-  margin: 0;
+  display: block;
   font-size: var(--fs-lg);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -241,6 +269,20 @@
   font-size: var(--fs-xs);
   font-weight: 400;
   color: var(--text-faint);
+}
+
+/* Pencil appears only on hover or keyboard focus */
+.field__edit-icon {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  color: var(--text-faint);
+}
+
+.field:hover .field__edit-icon,
+.field:focus-visible .field__edit-icon {
+  opacity: 1;
 }
 
 /* ---------- Indicators: shape carries meaning ---------- */
