@@ -7,6 +7,7 @@
   --bg: #000;
   --surface-sunken: #0d0d0d;     /* inputs, highlighted boxes */
   --surface-raised: #2e2e2e;     /* error dialog */
+  --surface-card: #161616;       /* cards set inside a panel */
   --surface-button: #1f1f1f;
 
   /* lines */

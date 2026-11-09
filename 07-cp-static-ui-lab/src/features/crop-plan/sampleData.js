@@ -22,8 +22,8 @@ export const revisions = [
 
 //  note: not handling MT yet
 export const categories = [
-    { key: "prior.quantity_inventory", cropYear: "prior", label: "Quantity Inventory", unit: "bu" },
-    { key: "prior.unit_price", cropYear: "prior", label: "Unit Price", unit: "$/bu" },
+    { key: "prior.quantity_inventory", cropYear: "prior", label: "Opening Inventory", unit: "bu" },
+    { key: "prior.unit_price", cropYear: "prior", label: "Unit Price (Prior)", unit: "$/bu" },
     { key: "acres", cropYear: "current", label: "Acres", unit: "ac" },
     { key: "unit_price", cropYear: "current", label: "Unit Price", unit: "$/bu" },
     { key: "yield", cropYear: "current", label: "Yield / Acre", unit: "bu/ac" },
@@ -50,4 +50,12 @@ export const rawData = [
     { id: 10, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "rent_cost", value: 35, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 11, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 2, categoryKey: "unit_price", value: 8.25, createdAt: "2026-05-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 12, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 2, categoryKey: "unit_price", value: 80, createdAt: "2026-05-12T00:00:00Z", createdBy: "Test User", memo: null },
+]
+
+// grouping
+
+export const cardGroups = [
+    { label: "Plant · Current Year", keys: ["acres", "unit_price", "yield"] },
+    { label: "Inflow · Prior Year", keys: ["prior.quantity_inventory", "prior.unit_price"] },
+    { label: "Outflow · Current Year Costs", keys: ["chem_cost", "fert_cost", "fuel_cost", "rent_cost", "seed_cost"]}
 ]

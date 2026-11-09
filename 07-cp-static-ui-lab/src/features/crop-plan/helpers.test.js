@@ -1,6 +1,6 @@
 
 import { describe, test, expect } from "vitest"
-import { resolver } from "./helpers"
+import { resolver, formatValue } from "./helpers"
 
 const revisions = [
     { id: 1, name: "Pre-seeding", order: 1 },
@@ -174,4 +174,17 @@ describe("resolver", () => {
 
         expect(rows).toEqual(snapshot)
     })
+})
+
+describe("formatValue", () => {
+    test.each([
+        [5000, "5,000"],
+        [132456, "132,456"],
+        [7, "7"],
+        [11.8, "11.80"],
+        [0, "0"]
+    ]) ("%s should be %s in formating", (input, expected) => {
+        expect(formatValue(input)).toBe(expected)
+    })
+    
 })

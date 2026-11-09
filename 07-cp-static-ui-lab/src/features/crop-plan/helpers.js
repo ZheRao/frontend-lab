@@ -83,7 +83,14 @@ export function resolver(rawData, targetRevision, revisions, categories) {
          
         
     }
-    // console.log(resolvedData)
     return resolvedData
+}
+
+export function formatValue(value) {
+    const decimals = Number.isInteger(value) ? 0 : 2
+    return new Intl.NumberFormat("en-CA", {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+    }).format(value)
 }
 

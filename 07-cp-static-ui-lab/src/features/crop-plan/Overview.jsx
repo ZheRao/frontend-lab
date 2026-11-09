@@ -5,7 +5,8 @@ import {
     clients,
     revisions,
     rawData,
-    categories
+    categories,
+    crops
 } from './sampleData.js'
 
 import {
@@ -13,11 +14,10 @@ import {
     resolver
 } from './helpers.js'
 
-const cardGroups = [
-    { label: "Plant · Current Year", keys: ["acres", "unit_price", "yield"] },
-    { label: "Inflow · Prior Year", keys: ["prior.quantity_inventory", "prior.unit_price"] },
-    { label: "Outflow · Current Year Costs", keys: ["chem_cost", "fert_cost", "fuel_cost", "rent_cost", "seed_cost"]}
-]
+import CropCard from './CropCard.jsx'
+
+import { Plus } from 'lucide-react' 
+import './CropPlan.css'
 
 
 function Overview() {
@@ -28,6 +28,7 @@ function Overview() {
     const forecastYear = searchParams.get("year")       //  string, event.target.value is string, URL components get string, here extraction gets string
     const revisionId = searchParams.get("revision")     //  string, event.target.value is string, URL components get string, here extraction gets string
 
+    // determine validity of the parameters
     const extractIds = (list) => {
         return list.map((item) => (item.id))
     }
@@ -42,10 +43,13 @@ function Overview() {
         revisionList: validRevisionId
     })
 
+    // resolve raw data
     const data = rawData.filter((row) => (row.clientId === Number(clientId) && row.forecastYear === Number(forecastYear)))
     const resolvedData = currentUrlState !== 'valid' ? {} : resolver(data, Number(revisionId), revisions, categories)
-    console.log("resolved data: ", resolvedData)
+
+    // transform catelog data
     const sortedRevisions = [...revisions].sort((a,b )=> a.order - b.order)
+
     // helpers
     //  update URL parameter
     const updateContext = (key, value) => {
@@ -65,60 +69,111 @@ function Overview() {
     
 
     return (
-        <div>
-            <h1>Crop Plan Configuration</h1>
-            <div>
+        <div className="crop-plan">
+            <header className="crop-plan__header">
+                <h1 className="crop-plan__title">Crop Plan Configuration</h1>
+                <p className="crop-plan__subtitle">Forecast inputs by client and year</p>
+            </header>
 
-                <label htmlFor="client">Client</label>
-                <select 
-                    id="client"
-                    value={clientId ?? ""} 
-                    onChange={(event) => updateContext("client", event.target.value)}
-                >
-                    <option value="" disabled>Please select a client</option>
-                    {clients.map((client) => (
-                        <option 
-                            key={client.id}
-                            value={String(client.id)}
-                        >
-                            {client.name}
-                        </option>
-                    ))}
-                </select>
+            <div className="workspace">
+                <section className="context" aria-label="Plan context">
+                    <div className="context__selectors">
+                        <div className="control">
+                            <label htmlFor="client" className="control__label">Client</label>
+                            <select 
+                                id="client"
+                                className="control__select"
+                                value={clientId ?? ""} 
+                                onChange={(event) => updateContext("client", event.target.value)}
+                            >
+                                <option value="" disabled>Please select a client</option>
+                                {clients.map((client) => (
+                                    <option 
+                                        key={client.id}
+                                        value={String(client.id)}
+                                    >
+                                        {client.name}
+                                    </option>
+                                ))}
+                            </select>                        
+                        </div>
 
-                <label htmlFor="year">Forecast year</label>
-                <select 
-                    id="year"
-                    value={forecastYear ?? ""} 
-                    onChange={(event) => updateContext("year", event.target.value)}
-                >
-                    <option value="" disabled>Please select a forecast year</option>
-                    {forecastYears.map((year) => (
-                        <option key={year} value={String(year)}>{year}</option>
-                    ))}
-                </select>
-            </div>
-            
-            {currentUrlState === 'partial' ? (
-                    <p>Select a client and a forecast year to begin.</p>
-                ) : currentUrlState === 'invalid' ? (
-                    <p>Invalid client, year, or revision</p>
-                ) : (
-                    <div>
-                        <p>workspace selected: Client {clientId}, Year {forecastYear}</p>
-                        {Object.keys(resolvedData).length === 0 ? (
-                            <div>
-                                <p>Empty Crop Section</p>
-                                <button>{revisions.find((rev)=>(rev.order===1)).name}</button>
-                            </div>
-                        ) : (sortedRevisions.map((rev) => (
-                            <button key={rev.id} onClick={()=>updateContext("revision", rev.id)}>
-                                {rev.name}
-                            </button>
-                        )))}
+                        <div className="control">
+                            <label htmlFor="year" className="control__label">Forecast year</label>
+                            <select 
+                                id="year"
+                                className="control__select"
+                                value={forecastYear ?? ""} 
+                                onChange={(event) => updateContext("year", event.target.value)}
+                            >
+                                <option value="" disabled>Please select a forecast year</option>
+                                {forecastYears.map((year) => (
+                                    <option key={year} value={String(year)}>{year}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-                )
-            }
+
+                    {currentUrlState === 'valid' && (
+                        <div className="control">
+                            <div className="control__label-row">
+                                <span className="control__label" id="revision-label">Revision</span>
+                                <p className="legend">
+                                    <span className="indicator indicator--local" aria-hidden="true" /> Saved in this revision
+                                    <span className="indicator indicator--inherited" aria-bidden="true" /> Inherited
+                                </p>
+                            </div>
+                            <div className="revision-group" role="group" aria-labelledby='revision-label'>
+                                {(Object.keys(resolvedData).length === 0 
+                                    ? sortedRevisions.filter((rev) => rev.order === 1)
+                                    : sortedRevisions
+                                ).map((rev) => {
+                                    const isSelected = String(rev.id) === revisionId 
+                                    return (
+                                        <button 
+                                            key={rev.id}
+                                            type="button"
+                                            className={isSelected ? "revision-button revision-button--selected" : "revision-button"}
+                                            aria-pressed={isSelected}
+                                            onClick={()=>updateContext("revision", String(rev.id))}
+                                        >
+                                            {rev.order} · {rev.name}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </section>
+
+                {currentUrlState === 'partial' ? (
+                        <p className="workspace__message">Select a client and a forecast year to see its crop plan.</p>
+                    ) : currentUrlState === 'invalid' ? (
+                        <p className="workspace__message">This link doesn't match a known client, year, or revision. Choose them again above.</p>
+                    ) : (
+                        <section className="crops" aria-labelledby="crops-title">
+                            <div className="crops__header">
+                                <h2 id="crops-title" className="crops__title">Crops</h2>
+                                <button type="button" className="btn btn-secondary">
+                                    <Plus size={16} aria-hidden="true" /> Add crop
+                                </button>
+                            </div>
+
+                            {Object.keys(resolvedData).length === 0 ? (
+                                <p className="workspace__message">No crops configured for this year yet.</p>
+                            ) : (
+                                <div className="crops__list">
+                                    {Object.entries(resolvedData).map(([cropId, fields]) => {
+                                        const crop = crops.find((crop) => crop.id === Number(cropId))
+                                        return <CropCard key={cropId} crop={crop} fields={fields} categories={categories} />
+                                    })}
+                                </div>
+                                
+                            )}
+                        </section>
+                    )
+                }
+            </div>
         </div>
     )
 }

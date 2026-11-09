@@ -1,0 +1,286 @@
+/* ---------- Page (layer 0) ---------- */
+.crop-plan {
+  max-width: 1040px;
+  padding: 32px 40px 48px;
+  color: var(--text);
+  font-family: var(--font);
+}
+
+.crop-plan__header {
+  margin-bottom: 20px;
+}
+
+.crop-plan__title {
+  margin: 0;
+  font-size: var(--fs-2xl);
+  font-weight: 600;
+}
+
+.crop-plan__subtitle {
+  margin: 4px 0 0;
+  font-size: var(--fs-md);
+  color: var(--text-faint);
+}
+
+/* ---------- Workspace panel (layer 1) ---------- */
+.workspace {
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: 24px;
+}
+
+.context {
+  display: grid;
+  gap: 20px;
+}
+
+.context__selectors {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.control {
+  display: grid;
+  gap: 6px;
+}
+
+.control__label {
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+}
+
+.control__label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.control__select {
+  appearance: none;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-control);
+  padding: 10px 12px;
+  font: inherit;
+  font-size: var(--fs-md);
+}
+
+.control__select:focus-visible,
+.revision-button:focus-visible {
+  outline: 2px solid var(--text);
+  outline-offset: 2px;
+}
+
+.revision-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.revision-button {
+  background: var(--surface-button);
+  color: var(--text-muted);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-pill);
+  padding: 6px 14px;
+  font: inherit;
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.revision-button--selected {
+  background: var(--light);
+  color: var(--text-on-light);
+  border-color: var(--light);
+  font-weight: 600;
+}
+
+.workspace__message {
+  margin: 24px 0 0;
+  padding: 40px 24px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  text-align: center;
+  font-size: var(--fs-md);
+  color: var(--text-faint);
+}
+
+/* ---------- Crops section, inside the workspace ---------- */
+.crops {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+
+.crops__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.crops__title {
+  margin: 0;
+  font-size: var(--fs-xl);
+  font-weight: 600;
+}
+
+.crops .workspace__message {
+  margin-top: 0;
+}
+
+.crops__list {
+  display: grid;
+  gap: 16px;
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.legend .indicator--inherited {
+  margin-left: 12px;
+}
+
+/* ---------- Crop card (layer 2, recessed) ---------- */
+.crop-card {
+  background: var(--surface-card);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-card);
+  padding: 18px 24px 6px;
+}
+
+.crop-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 6px;
+}
+
+.crop-card__name {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+}
+
+.crop-card__group {
+  border-top: 1px solid var(--border);
+  padding: 14px 0 16px;
+}
+
+.crop-card__group:first-of-type {
+  border-top: none;
+  padding-top: 8px;
+}
+
+.crop-card__edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  text-decoration: none;
+  border-radius: var(--radius-control);
+  padding: 4px 6px;
+  margin-right: -6px
+}
+
+.crop-card__edit:hover {
+  color: var(--text);
+}
+
+.crop-card__group-title {
+  margin: 0 0 10px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.crop-card__fields {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px 24px;
+}
+
+.field__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 4px;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.field__value {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.field__value--missing {
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+.field__unit {
+  margin-left: 4px;
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  color: var(--text-faint);
+}
+
+/* ---------- Indicators: shape carries meaning ---------- */
+.indicator {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.indicator--local {
+  background: var(--success);
+}
+
+.indicator--inherited {
+  border: 1.5px solid var(--text-faint);
+}
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 640px) {
+  .crop-plan {
+    padding: 24px 16px;
+  }
+
+  .workspace {
+    padding: 16px;
+  }
+
+  .context__selectors {
+    grid-template-columns: 1fr;
+  }
+
+  .crop-card__fields {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .crops__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
