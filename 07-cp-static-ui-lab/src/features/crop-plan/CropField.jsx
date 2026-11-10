@@ -14,11 +14,11 @@ function CropField({ label, unit, field, onSelect }){
     return (
         <button 
             type="button"
-            className="field"
+            className="crop-field"
             onClick={onSelect}
             aria-label={`${label}: ${spokenValue}, ${status}. Edit`}
         >
-            <span className="field__label">
+            <span className="crop-field__label">
                 {label}
                 {field && (
                     <span 
@@ -26,11 +26,11 @@ function CropField({ label, unit, field, onSelect }){
                         aria-hidden="true"
                     />
                 )}
-                <Pencil className="field__edit-icon" size={12} aria-hidden="true" />
+                <Pencil className="crop-field__edit-icon" size={12} aria-hidden="true" />
             </span>
-            <span className={field ? "field__value" : "field__value field__value--missing"}>
+            <span className={field ? "crop-field__value" : "crop-field__value crop-field__value--missing"}>
                 {field ? formatValue(field.value) : '—'}
-                {field && <span className="field__unit">{unit}</span>}
+                {field && <span className="crop-field__unit">{unit}</span>}
             </span>
         </button>
     )

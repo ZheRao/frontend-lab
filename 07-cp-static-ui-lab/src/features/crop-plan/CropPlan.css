@@ -216,7 +216,7 @@
 
 /* A button that doesn't look like one */
 
-.field {
+.crop-field {
   appearance: none;
   display: block;
   width: 100%;
@@ -232,16 +232,16 @@
   position: relative;
 }
 
-.field:hover{
+.crop-field:hover{
   background: var(--surface-button);
 }
 
-.field:focus-visible {
+.crop-field:focus-visible {
   outline: 2px solid var(--text);
   outline-offset: 0;
 }
 
-.field__label {
+.crop-field__label {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -251,7 +251,7 @@
   white-space: nowrap;
 }
 
-.field__value {
+.crop-field__value {
   display: block;
   font-size: var(--fs-lg);
   font-weight: 600;
@@ -259,12 +259,12 @@
   white-space: nowrap;
 }
 
-.field__value--missing {
+.crop-field__value--missing {
   font-weight: 400;
   color: var(--text-faint);
 }
 
-.field__unit {
+.crop-field__unit {
   margin-left: 4px;
   font-size: var(--fs-xs);
   font-weight: 400;
@@ -272,7 +272,7 @@
 }
 
 /* Pencil appears only on hover or keyboard focus */
-.field__edit-icon {
+.crop-field__edit-icon {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -280,8 +280,8 @@
   color: var(--text-faint);
 }
 
-.field:hover .field__edit-icon,
-.field:focus-visible .field__edit-icon {
+.crop-field:hover .crop-field__edit-icon,
+.crop-field:focus-visible .crop-field__edit-icon {
   opacity: 1;
 }
 
