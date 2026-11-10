@@ -40,7 +40,7 @@ export const categories = [
 export const rawData = [
     { id: 1, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "prior.quantity_inventory", value: 132456, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 2, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "prior.unit_price", value: 7, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
-    { id: 3, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "acres", value: 5000, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
+    { id: 3, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "acres", value: 5000, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: "Test" },
     { id: 4, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "yield", value: 70, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 5, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "unit_price", value: 7.75, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 6, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "seed_cost", value: 19, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
@@ -50,7 +50,7 @@ export const rawData = [
     { id: 10, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "rent_cost", value: 35, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 11, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 2, categoryKey: "unit_price", value: 8.25, createdAt: "2026-05-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 12, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 2, categoryKey: "unit_price", value: 80, createdAt: "2026-05-12T00:00:00Z", createdBy: "Test User", memo: null },
-    { id: 13, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "prior.quantity_inventory", value: 132456, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
+    // { id: 13, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "prior.quantity_inventory", value: 132456, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 14, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "prior.unit_price", value: 7, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 15, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "acres", value: 5000, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 16, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "yield", value: 70, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },

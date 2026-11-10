@@ -1,5 +1,6 @@
 // features/crop-plan/Overview.jsx
 
+import { useState } from 'react'
 import { useSearchParams, } from 'react-router'
 import { 
     clients,
@@ -19,6 +20,8 @@ import CropCard from './CropCard.jsx'
 import { Plus } from 'lucide-react' 
 import './CropPlan.css'
 
+import FieldEditModal from './FieldEditModal.jsx'
+
 
 function Overview() {
     const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
@@ -27,6 +30,13 @@ function Overview() {
     const clientId = searchParams.get("client")         //  string, event.target.value is string, URL components get string, here extraction gets string
     const forecastYear = searchParams.get("year")       //  string, event.target.value is string, URL components get string, here extraction gets string
     const revisionId = searchParams.get("revision")     //  string, event.target.value is string, URL components get string, here extraction gets string
+
+    // determines opening field edit dialog and its context
+    const contextKey = `${clientId}|${forecastYear}|${revisionId}`
+    const [editContext, setEditContext] = useState(null)    // on click, setEditContext({ contextkey, crop, catInfo, fieldInfo })
+                                                        //  crop contains id and name, catInfo contains key, label, unit, fieldInfo contains value, memo, isInherited, history
+    const [draft, setDraft] = useState(null)    // on edit, setDraft({ value: ..., memo: ... })
+    const canOpenEditDialog = editContext !== null && editContext.contextKey === contextKey
 
     // determine validity of the parameters
     const extractIds = (list) => {
@@ -67,8 +77,18 @@ function Overview() {
         setSearchParams(next)
     }
 
-    const handleFieldSelect = (cropId, categoryKey) => {
-        console.log("open field", cropId, categoryKey)
+    const handleFieldSelect = (crop, catInfo, fieldInfo) => {
+        setEditContext({
+            contextKey,
+            crop,
+            catInfo,
+            fieldInfo
+        })
+    }
+
+    const closeFieldEditor = () => {
+        setEditContext(null)
+        setDraft(null)
     }
     
 
@@ -178,6 +198,16 @@ function Overview() {
                     )
                 }
             </div>
+
+            {canOpenEditDialog && (
+                <FieldEditModal 
+                    open={canOpenEditDialog}
+                    editContext={editContext}
+                    draft={draft}
+                    setDraft={setDraft}
+                    onModalClose={closeFieldEditor}
+                />
+            )}
         </div>
     )
 }
