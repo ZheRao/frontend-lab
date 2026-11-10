@@ -39,7 +39,7 @@ function CropCard ({ crop, fields, categories, onFieldSelect }) {
                                     label={catInfo.label}
                                     unit={catInfo.unit}
                                     field={fieldInfo}
-                                    onSelect={() => onFieldSelect(crop, catInfo, fieldInfo)}
+                                    onSelect={() => onFieldSelect(crop, catInfo)}
                                 />
                             )
                         })}

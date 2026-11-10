@@ -326,3 +326,145 @@
     align-items: flex-start;
   }
 }
+
+/* ---------- Field dialog ---------- */
+.field-dialog__header {
+  display: grid;
+  gap: 4px;
+}
+
+.field-dialog__title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.field-dialog__crop {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.field-dialog__context {
+  margin: 0;
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+/* Current value: recessed, reference only */
+.field-dialog__current {
+  display: grid;
+  gap: 6px;
+  padding: 12px 14px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.field-dialog__current-label {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}
+
+.field-dialog__current-value {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.field-dialog__status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+}
+
+.field-dialog__memo {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.field-dialog__unit-hint {
+  color: var(--text-faint);
+}
+
+/* History */
+.field-dialog__history {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--divider);
+}
+
+.field-dialog__history-title {
+  margin: 0 0 10px;
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.field-dialog__empty {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-faint);
+}
+
+.history-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+  max-height: 240px;
+  overflow-y: auto;
+}
+
+.history-entry {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+}
+
+.history-entry__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.history-entry__value {
+  display: inline-flex;
+  align-items: baseline;
+  font-size: var(--fs-md);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.history-entry__badge {
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-size: var(--fs-xs);
+  font-weight: 500;
+  color: var(--text-muted);
+  background: var(--surface-button);
+  border-radius: var(--radius-pill);
+}
+
+.history-entry__meta {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+  white-space: nowrap;
+}
+
+.history-entry__memo {
+  margin: 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.history-entry__memo--empty {
+  color: var(--text-faint);
+}

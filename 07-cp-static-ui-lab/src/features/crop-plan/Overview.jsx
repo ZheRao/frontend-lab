@@ -31,11 +31,9 @@ function Overview() {
     const forecastYear = searchParams.get("year")       //  string, event.target.value is string, URL components get string, here extraction gets string
     const revisionId = searchParams.get("revision")     //  string, event.target.value is string, URL components get string, here extraction gets string
 
-    // determines opening field edit dialog and its context
+    // determines opening field edit dialog and its context (includes identity only)
     const contextKey = `${clientId}|${forecastYear}|${revisionId}`
-    const [editContext, setEditContext] = useState(null)    // on click, setEditContext({ contextkey, crop, catInfo, fieldInfo })
-                                                        //  crop contains id and name, catInfo contains key, label, unit, fieldInfo contains value, memo, isInherited, history
-    const [draft, setDraft] = useState(null)    // on edit, setDraft({ value: ..., memo: ... })
+    const [editContext, setEditContext] = useState(null)    // on click, setEditContext({ contextkey, cropId, categoryKey })
     const canOpenEditDialog = editContext !== null && editContext.contextKey === contextKey
 
     // determine validity of the parameters
@@ -56,6 +54,10 @@ function Overview() {
     // resolve raw data
     const data = rawData.filter((row) => (row.clientId === Number(clientId) && row.forecastYear === Number(forecastYear)))
     const resolvedData = currentUrlState !== 'valid' ? {} : resolver(data, Number(revisionId), revisions, categories)
+    // look up values for eidting
+    const editingCrop = editContext === null ? undefined : crops.find((crop)=>(crop.id===editContext.cropId))
+    const editingCategory = editContext === null ? undefined : categories.find((cat)=>(cat.key===editContext.categoryKey))
+    const editingField = editContext === null ? undefined : resolvedData[editContext.cropId]?.[editingCategory.key]
 
     // transform catelog data
     const sortedRevisions = [...revisions].sort((a,b )=> a.order - b.order)
@@ -77,18 +79,22 @@ function Overview() {
         setSearchParams(next)
     }
 
-    const handleFieldSelect = (crop, catInfo, fieldInfo) => {
+    const handleFieldSelect = (crop, catInfo) => {
         setEditContext({
             contextKey,
-            crop,
-            catInfo,
-            fieldInfo
+            cropId: crop.id,
+            categoryKey: catInfo.key
         })
     }
 
     const closeFieldEditor = () => {
         setEditContext(null)
-        setDraft(null)
+    }
+
+    // { id: 24, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 2, categoryKey: "unit_price", value: 80, createdAt: "2026-05-12T00:00:00Z", createdBy: "Test User", memo: null },
+    const handleFieldSubmit = ({ clientId, forecastYear, cropId, revisionId, categoryKey, value, createdBy, memo, }) => {
+        console.log(`meta data: client: ${clientId}, forecastYear: ${forecastYear}`)
+        console.log(`record {cropId: ${cropId}, revisionId: ${revisionId}, categoryKey: ${categoryKey}, value: ${Number(value)}, memo: ${memo}}`)
     }
     
 
@@ -202,10 +208,12 @@ function Overview() {
             {canOpenEditDialog && (
                 <FieldEditModal 
                     open={canOpenEditDialog}
-                    editContext={editContext}
-                    draft={draft}
-                    setDraft={setDraft}
                     onModalClose={closeFieldEditor}
+                    onRequestSubmit={handleFieldSubmit}
+                    contextKey={editContext.contextKey}
+                    crop={editingCrop}
+                    catInfo={editingCategory}
+                    fieldInfo={editingField}
                 />
             )}
         </div>

@@ -49,7 +49,7 @@ export const rawData = [
     { id: 9, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "fuel_cost", value: 11.8, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 10, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "rent_cost", value: 35, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 11, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 2, categoryKey: "unit_price", value: 8.25, createdAt: "2026-05-01T00:00:00Z", createdBy: "Test User", memo: null },
-    { id: 12, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 2, categoryKey: "unit_price", value: 80, createdAt: "2026-05-12T00:00:00Z", createdBy: "Test User", memo: null },
+    { id: 12, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 2, categoryKey: "unit_price", value: 80, createdAt: "2026-05-12T00:00:00Z", createdBy: "Test User", memo: "making the number absurd so that it really stands out to people you know?" },
     // { id: 13, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "prior.quantity_inventory", value: 132456, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 14, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "prior.unit_price", value: 7, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
     { id: 15, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 1, categoryKey: "acres", value: 5000, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },

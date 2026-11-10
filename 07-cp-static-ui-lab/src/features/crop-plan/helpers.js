@@ -94,3 +94,11 @@ export function formatValue(value) {
     }).format(value)
 }
 
+const dateFormatter = new Intl.DateTimeFormat("en-CA", {
+    dateStyle: "medium",
+    timeStyle: "short"
+})
+
+export function formatDate(isoString) {
+    return dateFormatter.format(new Date(isoString))
+}
