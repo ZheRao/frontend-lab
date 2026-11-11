@@ -16,25 +16,43 @@ import {
 } from './helpers.js'
 
 import CropCard from './CropCard.jsx'
-
-import { Plus } from 'lucide-react' 
 import './CropPlan.css'
 
 import FieldEditModal from './FieldEditModal.jsx'
 
-
 function Overview() {
     const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
     const [searchParams, setSearchParams] = useSearchParams()
+
     // read URL state
     const clientId = searchParams.get("client")         //  string, event.target.value is string, URL components get string, here extraction gets string
     const forecastYear = searchParams.get("year")       //  string, event.target.value is string, URL components get string, here extraction gets string
     const revisionId = searchParams.get("revision")     //  string, event.target.value is string, URL components get string, here extraction gets string
 
+
     // determines opening field edit dialog and its context (includes identity only)
-    const contextKey = `${clientId}|${forecastYear}|${revisionId}`
+    const subContextKey = `${clientId}|${forecastYear}` // partial context, client, year only
+    const contextKey = `${clientId}|${forecastYear}|${revisionId}`  // full context, client, year, revision
     const [editContext, setEditContext] = useState(null)    // on click, setEditContext({ contextkey, cropId, categoryKey })
     const canOpenEditDialog = editContext !== null && editContext.contextKey === contextKey
+
+    // adding crop
+    //  start crop draft always set revision to 1 globally, changing revision deletes the draft, so you cannot directly add rev2 for a new crop, everything starts from rev1
+    const [draftCrop, setDraftCrop] =  useState(null)   //  { subContextKey, cropId }
+    const visibleDraftCropId = 
+        draftCrop !== null && 
+        draftCrop.subContextKey === subContextKey && 
+        revisionId === "1"
+        ? draftCrop.cropId 
+        : null
+
+    const startCropEdit = (id) => {
+        setDraftCrop({
+            subContextKey,
+            cropId: id
+        })
+    }
+    if (draftCrop !== null && subContextKey !== draftCrop.subContextKey) {setDraftCrop(null)}
 
     // determine validity of the parameters
     const extractIds = (list) => {
@@ -54,6 +72,8 @@ function Overview() {
     // resolve raw data
     const data = rawData.filter((row) => (row.clientId === Number(clientId) && row.forecastYear === Number(forecastYear)))
     const resolvedData = currentUrlState !== 'valid' ? {} : resolver(data, Number(revisionId), revisions, categories)
+    const existingCrops = Object.keys(resolvedData)
+    const cropCandidates = crops.filter((crop)=>(!existingCrops.includes(String(crop.id))))
     // look up values for eidting
     const editingCrop = editContext === null ? undefined : crops.find((crop)=>(crop.id===editContext.cropId))
     const editingCategory = editContext === null ? undefined : categories.find((cat)=>(cat.key===editContext.categoryKey))
@@ -61,6 +81,7 @@ function Overview() {
 
     // transform catelog data
     const sortedRevisions = [...revisions].sort((a,b )=> a.order - b.order)
+
 
     // helpers
     //  update URL parameter
@@ -70,6 +91,7 @@ function Overview() {
         next.set(key, value)
         if (key === "client" || key === "year") {
             next.delete("revision")
+            setDraftCrop(null)
 
             if (next.get("year") && next.get("client")) {
                 next.set("revision", "1")
@@ -91,7 +113,6 @@ function Overview() {
         setEditContext(null)
     }
 
-    // { id: 24, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 2, categoryKey: "unit_price", value: 80, createdAt: "2026-05-12T00:00:00Z", createdBy: "Test User", memo: null },
     const handleFieldSubmit = ({ clientId, forecastYear, cropId, revisionId, categoryKey, value, createdBy, memo, }) => {
         console.log(`meta data: client: ${clientId}, forecastYear: ${forecastYear}`)
         console.log(`record {cropId: ${cropId}, revisionId: ${revisionId}, categoryKey: ${categoryKey}, value: ${Number(value)}, memo: ${memo}}`)
@@ -165,7 +186,9 @@ function Overview() {
                                             type="button"
                                             className={isSelected ? "revision-button revision-button--selected" : "revision-button"}
                                             aria-pressed={isSelected}
-                                            onClick={()=>updateContext("revision", String(rev.id))}
+                                            onClick={()=>{
+                                                updateContext("revision", String(rev.id))
+                                            }}
                                         >
                                             {rev.order} · {rev.name}
                                         </button>
@@ -184,15 +207,37 @@ function Overview() {
                         <section className="crops" aria-labelledby="crops-title">
                             <div className="crops__header">
                                 <h2 id="crops-title" className="crops__title">Crops</h2>
-                                <button type="button" className="btn btn-secondary">
-                                    <Plus size={16} aria-hidden="true" /> Add crop
-                                </button>
+                                <select 
+                                    id="crop"
+                                    className="control__select"
+                                    value=""
+                                    onChange={(event)=>{
+                                        updateContext("revision", "1")  // reset revision to 1, so draft always starts from revision 1
+                                        startCropEdit(Number(event.target.value))
+                                    }}
+                                    aria-label="Add crop"
+                                >
+                                    <option value="" disabled> + Add crop</option>
+                                    {cropCandidates.map((crop) => (
+                                        <option
+                                            key={crop.id}
+                                            value={String(crop.id)}
+                                        >
+                                            {crop.name}
+                                        </option>
+                                    ))}
+                                </select>   
                             </div>
 
-                            {Object.keys(resolvedData).length === 0 ? (
+                            {Object.keys(resolvedData).length === 0  && visibleDraftCropId===null ? (
                                 <p className="workspace__message">No crops configured for this year yet.</p>
                             ) : (
                                 <div className="crops__list">
+                                    {visibleDraftCropId && (
+                                        <CropCard key={draftCrop.cropId} categories={categories} onFieldSelect={handleFieldSelect} fields={{}}
+                                            crop={crops.find((crop)=>(crop.id===draftCrop.cropId))}
+                                        />
+                                    )}
                                     {Object.entries(resolvedData).map(([cropId, fields]) => {
                                         const crop = crops.find((crop) => crop.id === Number(cropId))
                                         return <CropCard key={cropId} crop={crop} fields={fields} categories={categories} onFieldSelect={handleFieldSelect} />

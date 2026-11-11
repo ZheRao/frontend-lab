@@ -10,7 +10,18 @@ export const clients = [
 export const crops = [
     {id: 1, name: "Durum"},
     {id: 2, name: "Canola"},
-    {id: 3, name: "Flax"}
+    {id: 3, name: "Barley"},
+    {id: 4, name: "Green Lentils"},
+    {id: 5, name: "Red Lentils"},
+    {id: 6, name: "Wheat (HRSW)"},
+    {id: 7, name: "Chick Peas"},
+    {id: 8, name: "Oats"},
+    {id: 9, name: "Seed Oats"},
+    {id: 10, name: "Soy Beans"},
+    {id: 11, name: "Flax"},
+    {id: 12, name: "Maple Peas"},
+    {id: 13, name: "Fenugreek"},
+    {id: 14, name: "Hemp"}
 ]
 
 export const revisions = [

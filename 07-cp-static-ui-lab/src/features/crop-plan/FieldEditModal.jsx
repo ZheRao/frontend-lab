@@ -9,8 +9,6 @@ import {
 import { formatValue } from './helpers.js'
 import { formatDate } from './helpers.js'
 
-// on click, setEditContext({ contextkey, crop, catInfo, fieldInfo })
-//  crop contains id and name, catInfo contains key, label, unit, fieldInfo contains value, memo, isInherited, history
 function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop, catInfo, fieldInfo }) {
     const dialogRef = useRef(null)
 
@@ -92,7 +90,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                             Saved in this revision
                         </span>
                     )}
-                    {fieldInfo?.memo && <p className="field-dialog__memo">{fieldInfo.memo}</p>}
+                    {fieldInfo?.memo && <p className="field-dialog__memo">Last memo: {fieldInfo.memo}</p>}
                 </div>
                 
                 <label className="field">

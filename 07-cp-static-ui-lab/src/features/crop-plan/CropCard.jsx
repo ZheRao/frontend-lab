@@ -4,26 +4,16 @@
 // fields -> { "unit_prce": { id, revisionId, isInherited, history, ... } , ... }
 // categories -> { key, label, cropYear, unit } 
 
-import { Link, useSearchParams } from 'react-router'
-import { ChevronRight } from 'lucide-react'
-
 import { cardGroups } from "./sampleData"
 import CropField from './CropField'
 
 function CropCard ({ crop, fields, categories, onFieldSelect }) {
 
-    const [searchParams] = useSearchParams()
-
     return (
         <section className="crop-card">
             <header className="crop-card__header">
                 <h3 className="crop-card__name">{crop.name}</h3>
-                {/* <Link
-                    className="crop-card__edit"
-                    to={{ pathname: `/crop-plans/${crop.id}`, search: searchParams.toString() }}
-                >
-                    Edit inputs <ChevronRight size={16} aria-hidden="true" />
-                </Link> */}
+                {Object.keys(fields).length===0 && <span className="history-entry__badge">Draft</span>}
             </header>
 
             {cardGroups.map((group) => (
