@@ -209,7 +209,7 @@ function Overview() {
                                 <h2 id="crops-title" className="crops__title">Crops</h2>
                                 <select 
                                     id="crop"
-                                    className="control__select"
+                                    className="btn btn-secondary add-crop"
                                     value=""
                                     onChange={(event)=>{
                                         updateContext("revision", "1")  // reset revision to 1, so draft always starts from revision 1
