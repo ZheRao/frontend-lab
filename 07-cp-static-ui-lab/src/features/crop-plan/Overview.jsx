@@ -1,11 +1,10 @@
 // features/crop-plan/Overview.jsx
 
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useSearchParams, } from 'react-router'
 import { 
     clients,
     revisions,
-    rawData,
     categories,
     crops
 } from './sampleData.js'
@@ -15,6 +14,10 @@ import {
     resolver
 } from './helpers.js'
 
+import { 
+    getCropPlan
+} from './fakeApi.js'
+
 import CropCard from './CropCard.jsx'
 import './CropPlan.css'
 
@@ -22,6 +25,10 @@ import FieldEditModal from './FieldEditModal.jsx'
 
 function Overview() {
     const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
+
+    // crop plan data
+    const [loadedPlan, setLoadedPlan] = useState(null)  // { clientId, forecastYear, rows }
+
     const [searchParams, setSearchParams] = useSearchParams()
 
     // read URL state
@@ -30,11 +37,16 @@ function Overview() {
     const revisionId = searchParams.get("revision")     //  string, event.target.value is string, URL components get string, here extraction gets string
 
 
-    // determines opening field edit dialog and its context (includes identity only)
+    // field editor context: does the field user requested to edit match the current context? is it consistent to go ahead to enable edit?
     const subContextKey = `${clientId}|${forecastYear}` // partial context, client, year only
     const contextKey = `${clientId}|${forecastYear}|${revisionId}`  // full context, client, year, revision
     const [editContext, setEditContext] = useState(null)    // on click, setEditContext({ contextkey, cropId, categoryKey })
     const canOpenEditDialog = editContext !== null && editContext.contextKey === contextKey
+
+    // loaded crop plan context: should the crop plan being loaded? does loaded crop plan match the current URL?
+    const matchesCropPlanContext = 
+        loadedPlan?.clientId === clientId && 
+        loadedPlan?.forecastYear === forecastYear 
 
     // adding crop
     //  start crop draft always set revision to 1 globally, changing revision deletes the draft, so you cannot directly add rev2 for a new crop, everything starts from rev1
@@ -52,7 +64,9 @@ function Overview() {
             cropId: id
         })
     }
-    if (draftCrop !== null && subContextKey !== draftCrop.subContextKey) {setDraftCrop(null)}
+
+    // sync reference
+    const refreshLock = useRef(false)   // prevent duplicated refresh
 
     // determine validity of the parameters
     const extractIds = (list) => {
@@ -69,9 +83,47 @@ function Overview() {
         revisionList: validRevisionId
     })
 
+    // effects
+    //  loading new crop plan data
+    useEffect(() => {
+        if (!clientId || !forecastYear) return 
+
+        const load = async () => {
+            const result = await refresh()
+            
+            if (result === 'failed') {
+                console.log("crop plan data load failed")
+            }
+        }
+
+        load()
+
+    }, [clientId, forecastYear])
+
+    // async functions
+    const refresh = async () => {
+        if (refreshLock.current) return 'skipped'
+
+        refreshLock.current = true
+        try {
+            const rows = await getCropPlan(clientId, forecastYear)
+            setLoadedPlan({
+                clientId,
+                forecastYear,
+                rows
+            })
+            return 'succeed'
+        } catch (err) {
+            console.log("refresh error: ", err)
+            return 'failed'
+        } finally {
+            refreshLock.current = false
+        }
+    }
+
     // resolve raw data
-    const data = rawData.filter((row) => (row.clientId === Number(clientId) && row.forecastYear === Number(forecastYear)))
-    const resolvedData = currentUrlState !== 'valid' ? {} : resolver(data, Number(revisionId), revisions, categories)
+    const data = matchesCropPlanContext ? loadedPlan.rows : []
+    const resolvedData = currentUrlState !== 'valid' || !matchesCropPlanContext ? {} : resolver(data, Number(revisionId), revisions, categories)
     const existingCrops = Object.keys(resolvedData)
     const cropCandidates = crops.filter((crop)=>(!existingCrops.includes(String(crop.id))))
     // look up values for eidting
@@ -121,13 +173,16 @@ function Overview() {
 
     return (
         <div className="crop-plan">
+            {/* headers */}
             <header className="crop-plan__header">
                 <h1 className="crop-plan__title">Crop Plan Configuration</h1>
                 <p className="crop-plan__subtitle">Forecast inputs by client and year</p>
             </header>
 
+            {/* client/year selection, revision, crop cards  */}
             <div className="workspace">
                 <section className="context" aria-label="Plan context">
+                    {/* client/year selector  */}
                     <div className="context__selectors">
                         <div className="control">
                             <label htmlFor="client" className="control__label">Client</label>
@@ -165,6 +220,9 @@ function Overview() {
                         </div>
                     </div>
 
+                    {/* loading */}
+
+                    {/* revision selector */}
                     {currentUrlState === 'valid' && (
                         <div className="control">
                             <div className="control__label-row">
@@ -199,6 +257,7 @@ function Overview() {
                     )}
                 </section>
 
+                {/* render appropriate state and/or crop cards */}
                 {currentUrlState === 'partial' ? (
                         <p className="workspace__message">Select a client and a forecast year to see its crop plan.</p>
                     ) : currentUrlState === 'invalid' ? (
@@ -250,6 +309,7 @@ function Overview() {
                 }
             </div>
 
+            {/* field editor  */}
             {canOpenEditDialog && (
                 <FieldEditModal 
                     open={canOpenEditDialog}
@@ -261,6 +321,8 @@ function Overview() {
                     fieldInfo={editingField}
                 />
             )}
+
+            {/* dialogs: pending, success, error */}
         </div>
     )
 }
