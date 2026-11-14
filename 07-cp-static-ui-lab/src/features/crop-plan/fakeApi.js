@@ -31,7 +31,7 @@ let nextId = 25
 
 export function getCropPlan (clientId, forecastYear) {
     const data = db.filter((record)=> (record.clientId === Number(clientId) && record.forecastYear === Number(forecastYear)))
-    // callCount++
+    callCount++
     const shouldFail = callCount % 2 === 0
     return new Promise((resolve, reject) => {
         setTimeout(() => {

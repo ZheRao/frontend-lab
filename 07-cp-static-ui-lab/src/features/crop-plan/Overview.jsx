@@ -21,13 +21,37 @@ import {
 import CropCard from './CropCard.jsx'
 import './CropPlan.css'
 
+import { 
+    PendingDialog,
+    SuccessDialog,
+    NoticeBanner, 
+} from '../../Dialogs.jsx'
+
+import ErrorDialog from '../../ErrorDialog.jsx'
+
 import FieldEditModal from './FieldEditModal.jsx'
+
+const KNOWN_RECOVERIES = ['refresh']
+const REFRESH_FAILURE_ERROR = {
+    type: "refresh",
+    code: "REFRESH_ERROR",
+    title: "Crop Plan Failed to Load",
+    message: "The selected client's crop plan retrieval failed. Please try reloading again.",
+    recovery: "refresh"
+}
 
 function Overview() {
     const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
 
-    // crop plan data
+    // states
+    //  crop plan data
     const [loadedPlan, setLoadedPlan] = useState(null)  // { clientId, forecastYear, rows }
+    //  system state
+    const [sysState, setSysState] = useState('idle') // "loading" | "pending" | "success" | "idle"
+    //  error state
+    const [error, setError] = useState(null)    // { type, code, title, message, recovery }
+    const recovery = KNOWN_RECOVERIES.includes(error?.recovery) ? error.recovery : 'refresh'    // make refresh the default recovery
+    const isSystemBusy = (sysState === "loading" || sysState === "pending" || error !== null)
 
     const [searchParams, setSearchParams] = useSearchParams()
 
@@ -92,18 +116,26 @@ function Overview() {
             const result = await refresh()
             
             if (result === 'failed') {
-                console.log("crop plan data load failed")
+                setError(REFRESH_FAILURE_ERROR)
             }
         }
-
         load()
-
     }, [clientId, forecastYear])
+
+    //  disable 'Esc' while system busy
+    useEffect(()=>{
+        if (!isSystemBusy) return 
+        const blockEscape = (event) => {
+            if (event.key==='Escape') event.preventDefault()
+        }
+        document.addEventListener('keydown', blockEscape, true)
+        return () => document.removeEventListener('keydown', blockEscape, true)
+    }, [isSystemBusy])
 
     // async functions
     const refresh = async () => {
         if (refreshLock.current) return 'skipped'
-
+        setSysState('loading')
         refreshLock.current = true
         try {
             const rows = await getCropPlan(clientId, forecastYear)
@@ -114,10 +146,11 @@ function Overview() {
             })
             return 'succeed'
         } catch (err) {
-            console.log("refresh error: ", err)
             return 'failed'
         } finally {
             refreshLock.current = false
+            setSysState('idle') // if there's error, system is still busy because error !== null, reset system state to idle
+            
         }
     }
 
@@ -133,6 +166,31 @@ function Overview() {
 
     // transform catelog data
     const sortedRevisions = [...revisions].sort((a,b )=> a.order - b.order)
+
+    // error handling
+    const handleErrorRecovery = async () => {
+        if (error === null) return 
+
+        if (recovery !== error.recovery) {
+            setError({
+                type: "unknown",
+                code: "UNKNOWN",
+                title: "Unknown Error Occurred",
+                message: `An error without valid recovery option has occurred, please contact system admin with this error code: ${error.code}`,
+                recovery: "refresh"
+            })
+            return
+        }
+
+        setError(null)
+        if (recovery === "refresh") {
+            const result = await refresh()
+
+            if (result === 'failed') {
+                setError(REFRESH_FAILURE_ERROR)
+            }
+        }
+    }
 
 
     // helpers
@@ -220,8 +278,6 @@ function Overview() {
                         </div>
                     </div>
 
-                    {/* loading */}
-
                     {/* revision selector */}
                     {currentUrlState === 'valid' && (
                         <div className="control">
@@ -262,6 +318,12 @@ function Overview() {
                         <p className="workspace__message">Select a client and a forecast year to see its crop plan.</p>
                     ) : currentUrlState === 'invalid' ? (
                         <p className="workspace__message">This link doesn't match a known client, year, or revision. Choose them again above.</p>
+                    ) : sysState === 'loading' ? (
+                        // loading
+                        <PendingDialog
+                            open={sysState === 'loading'}
+                            label='Loading Crop Plan ...'
+                        />
                     ) : (
                         <section className="crops" aria-labelledby="crops-title">
                             <div className="crops__header">
@@ -323,6 +385,13 @@ function Overview() {
             )}
 
             {/* dialogs: pending, success, error */}
+            <ErrorDialog
+                open={error !== null}
+                title={error?.title}
+                message={error?.message}
+                actionLabel={error?.recovery==='refresh' ? 'Refresh Crop Plan Data' : 'Close'}
+                onAction={handleErrorRecovery}
+            />
         </div>
     )
 }
