@@ -15,7 +15,8 @@ import {
 } from './helpers.js'
 
 import { 
-    getCropPlan
+    getCropPlan,
+    createRecord
 } from './fakeApi.js'
 
 import CropCard from './CropCard.jsx'
@@ -24,14 +25,15 @@ import './CropPlan.css'
 import { 
     PendingDialog,
     SuccessDialog,
-    NoticeBanner, 
+    NoticeBanner
 } from '../../Dialogs.jsx'
 
 import ErrorDialog from '../../ErrorDialog.jsx'
 
 import FieldEditModal from './FieldEditModal.jsx'
 
-const KNOWN_RECOVERIES = ['refresh']
+const KNOWN_RECOVERIES = ['refresh', 'return-to-edit'] // 'refresh'- for field editor: close error + field editor + refresh, reset edit context
+                                            // 'return-to-edit'- close error and return to field editor, draft/context preserved
 const REFRESH_FAILURE_ERROR = {
     type: "refresh",
     code: "REFRESH_ERROR",
@@ -39,9 +41,21 @@ const REFRESH_FAILURE_ERROR = {
     message: "The selected client's crop plan retrieval failed. Please try reloading again.",
     recovery: "refresh"
 }
+const UNKNOWN_ERROR = {
+    type: "unknown",
+    code: "UNKNOWN_ERROR",
+    title: "Operation Outcome Unknown",
+    message: "The server may have completed the operation. Refresh before attempting another change.",
+    recovery: "refresh"
+}
 
 function Overview() {
     const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
+
+    // sync reference
+    const refreshLock = useRef(false)   // prevent duplicated refresh
+    const requestLock = useRef(false)   // prevent duplicated mutation request
+    const requestNum = useRef(0)        // identify stale requests
 
     // states
     //  crop plan data
@@ -52,6 +66,8 @@ function Overview() {
     const [error, setError] = useState(null)    // { type, code, title, message, recovery }
     const recovery = KNOWN_RECOVERIES.includes(error?.recovery) ? error.recovery : 'refresh'    // make refresh the default recovery
     const isSystemBusy = (sysState === "loading" || sysState === "pending" || error !== null)
+    //  notice state
+    const [notice, setNotice] = useState(null)  // { id, title, message }
 
     const [searchParams, setSearchParams] = useSearchParams()
 
@@ -88,9 +104,6 @@ function Overview() {
             cropId: id
         })
     }
-
-    // sync reference
-    const refreshLock = useRef(false)   // prevent duplicated refresh
 
     // determine validity of the parameters
     const extractIds = (list) => {
@@ -133,9 +146,14 @@ function Overview() {
     }, [isSystemBusy])
 
     // async functions
-    const refresh = async () => {
+    const refresh = async ({ partOfWrite = false } = {}) => {
         if (refreshLock.current) return 'skipped'
-        setSysState('loading')
+        setEditContext(null)    // when refreshing, always reset edit context for field editor
+        // setDraftCrop(null)  // when refreshing, always reset drop crop into null
+        if (!partOfWrite) {
+            // if this refresh is part of mutation, the system is already in 'pending', no need to set it to 'loading'
+            setSysState('loading')
+        }
         refreshLock.current = true
         try {
             const rows = await getCropPlan(clientId, forecastYear)
@@ -144,13 +162,71 @@ function Overview() {
                 forecastYear,
                 rows
             })
-            return 'succeed'
+            return 'succeeded'
         } catch (err) {
             return 'failed'
         } finally {
             refreshLock.current = false
-            setSysState('idle') // if there's error, system is still busy because error !== null, reset system state to idle
+            if (!partOfWrite) {
+                // if this is part of mutation, the state will be set to 'success', so shouldn't set it to 'idle'
+                setSysState('idle') // if there's error, system is still busy because error !== null, reset system state to idle
+            }
             
+        }
+    }
+
+    const runWrite = async (action) => {
+        if (sysState !== 'idle' || isSystemBusy || requestLock.current) return // safeguard against when system is not ready for a mutation
+        // prepare system states
+        requestLock.current = true  // handled in finally
+        setSysState('pending')  // handled in try/catch branches, not in finally, as it requires different states
+        const currentRequestNum = ++requestNum.current
+
+        // sending request
+        try {
+            const result = await action()
+
+            // if this result is stale
+            if (currentRequestNum !== requestNum.current) {
+                setNotice({
+                    title: "Previous Request Completed",
+                    message: "An operation you stopped waiting for has since succeeded. Refresh the crop plan page when convenient to see the latest data"
+                })
+                return 
+            }
+
+            // refresh the crop plan data
+            const refreshResult = await refresh({ partOfWrite: true })
+            if (currentRequestNum !== requestNum.current) return    // if the request become stale during refresh, ignore
+
+            if (refreshResult === 'succeeded') {
+                setSysState('success')
+                // onDone of success dialog need to set sys state back to 'idle'
+            } else {
+                setSysState('idle')
+                setError({
+                    type: "refresh",
+                    code: "REFRESH_ERROR",
+                    title: "Change Succeeded, Refresh Failed",
+                    message: "Your change was confirmed by the server, but the updated list could not be retrieved.",
+                    recovery: "refresh"
+                })
+            }
+
+        } catch(err) {
+            // set error and use recovery classifier to determine recovery if the result is not stale
+            if (currentRequestNum !== requestNum.current) return 
+            setSysState('idle')
+            if (false) {
+                // separate ApiError + non-retryable error handling branch later
+            } else {
+                setError(UNKNOWN_ERROR)
+            }
+        } finally {
+            // reset request lock only if this request is not stale
+            if (currentRequestNum === requestNum.current) {
+                requestLock.current = false
+            }
         }
     }
 
@@ -182,7 +258,10 @@ function Overview() {
             return
         }
 
+        // close error dialog
         setError(null)
+
+        // if recover requires refresh, execute refresh
         if (recovery === "refresh") {
             const result = await refresh()
 
@@ -219,13 +298,55 @@ function Overview() {
         })
     }
 
-    const closeFieldEditor = () => {
-        setEditContext(null)
-    }
 
-    const handleFieldSubmit = ({ clientId, forecastYear, cropId, revisionId, categoryKey, value, createdBy, memo, }) => {
-        console.log(`meta data: client: ${clientId}, forecastYear: ${forecastYear}`)
-        console.log(`record {cropId: ${cropId}, revisionId: ${revisionId}, categoryKey: ${categoryKey}, value: ${Number(value)}, memo: ${memo}}`)
+    const handleFieldSubmit = async ({ clientId, forecastYear, cropId, revisionId, categoryKey, value, createdBy, memo, }) => {
+        if (sysState !== 'idle' || isSystemBusy || requestLock.current) return // safeguard against when system is not ready for a mutation
+
+        // validate 'value' input
+        if (value.trim() === '') {
+            setError({
+                type: "validation", 
+                title: "Invalid Value", 
+                code: "INVALID_VALUE",
+                message: "Value cannot be missing or consist entirely of whitespace",
+                recovery: "return-to-edit"
+            })
+            return
+        } 
+
+        const valueConverted = Number(value)
+
+        if (Number.isNaN(valueConverted)) {
+            setError({
+                type: "validation", 
+                title: "Invalid Value", 
+                code: "INVALID_VALUE",
+                message: "Value must be numeric",
+                recovery: "return-to-edit"
+            })
+            return
+        } else if (valueConverted < 0) {
+            setError({
+                type: "validation", 
+                title: "Invalid Value", 
+                code: "INVALID_VALUE",
+                message: "Value must be positive",
+                recovery: "return-to-edit"
+            })
+            return
+        }
+
+        await runWrite(() => createRecord({
+            clientId,
+            forecastYear,
+            cropId,
+            revisionId,
+            categoryKey,
+            value: valueConverted,
+            memo,
+            createdBy
+        }))
+
     }
     
 
@@ -375,7 +496,7 @@ function Overview() {
             {canOpenEditDialog && (
                 <FieldEditModal 
                     open={canOpenEditDialog}
-                    onModalClose={closeFieldEditor}
+                    onModalClose={() => setEditContext(null)}
                     onRequestSubmit={handleFieldSubmit}
                     contextKey={editContext.contextKey}
                     crop={editingCrop}
@@ -385,6 +506,18 @@ function Overview() {
             )}
 
             {/* dialogs: pending, success, error */}
+            <PendingDialog
+                open={sysState==='pending'}
+                label="Processing ..."
+            />
+
+            <SuccessDialog
+                open={sysState === 'success'}
+                message='Request Succeeded!'
+                onDone={()=>setSysState('idle')}
+                duration={1000}
+            />
+
             <ErrorDialog
                 open={error !== null}
                 title={error?.title}

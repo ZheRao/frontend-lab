@@ -1,3 +1,4 @@
+// features/crop-plan/fakeApi.js
 
 let db = [
     { id: 1, clientId: 1, forecastYear: 2026, cropId: 1, revisionId: 1, categoryKey: "prior.quantity_inventory", value: 132456, createdAt: "2026-01-01T00:00:00Z", createdBy: "Test User", memo: null },
@@ -26,6 +27,7 @@ let db = [
     { id: 24, clientId: 1, forecastYear: 2026, cropId: 2, revisionId: 2, categoryKey: "unit_price", value: 80, createdAt: "2026-05-12T00:00:00Z", createdBy: "Test User", memo: null },
 ]
 
+
 let callCount = 0
 let nextId = 25
 
@@ -39,6 +41,36 @@ export function getCropPlan (clientId, forecastYear) {
                 reject(new Error("fake error: cannot retrieve crop-plan"))
             } else {
                 resolve([...data])
+            }
+        }, 1000)
+    })
+}
+
+export function createRecord ({
+    clientId, forecastYear, cropId, revisionId, categoryKey, value, memo, createdBy
+}) {
+    callCount++
+    const shouldFail = callCount % 2 === 1
+    return new Promise((resolve, reject) => {
+        setTimeout(()=>{
+            if (false) {
+                reject(new Error("fake error: cannot add the new record"))
+            } else {
+                const newRecord = {
+                    id: nextId,
+                    clientId,
+                    forecastYear,
+                    cropId,
+                    revisionId,
+                    categoryKey,
+                    value,
+                    createdAt: "2026-05-12T00:00:00Z",
+                    createdBy,
+                    memo
+                }
+                nextId++
+                db = [...db, newRecord]
+                resolve({...newRecord})
             }
         }, 1000)
     })

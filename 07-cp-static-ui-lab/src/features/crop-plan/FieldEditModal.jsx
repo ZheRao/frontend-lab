@@ -28,16 +28,6 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
     const recordRevisionId = fieldInfo?.revisionId
     const recordRevision = revisions.find((rev) => (rev.id === recordRevisionId))
 
-    const validateInput = (input) => {
-        return (
-            input.trim() === '' 
-                ? {type: "validation", title: "Invalid Value", code: "INVALID_VALUE",
-                    message: "Value cannot be missing or consist entirely of whitespace",
-                    recovery: "return-to-draft"} // setting up error object for error dialog later
-                : null
-        )
-    }
-
     const [draft, setDraft] = useState({ value: '', memo: null })    // on edit, setDraft({ value: ..., memo: ... })
 
     return (
@@ -48,16 +38,15 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                     event.preventDefault()
                     if (draft.value.trim() === '') return   // safeguard against empty draft value
                     onRequestSubmit({
-                        clientId,
-                        forecastYear,
+                        clientId: Number(clientId),
+                        forecastYear: Number(forecastYear),
                         cropId: crop.id,
-                        revisionId,
+                        revisionId: Number(revisionId),
                         categoryKey: catInfo.key,
                         value: draft.value,
                         createdBy: "Test User",
                         memo: (draft.memo ?? '').trim() === '' ? null : draft.memo.trim()
                     })
-                    onModalClose()
                 }}
             >
                 <header className="field-dialog__header">
