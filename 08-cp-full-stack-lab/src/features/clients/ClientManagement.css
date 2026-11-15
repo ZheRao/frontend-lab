@@ -1,0 +1,55 @@
+
+
+/* =========================================================
+   4. PAGE: card, header, pill, list
+   ========================================================= */
+.client-panel {
+  padding: 20px 24px 24px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.client-panel > header.row {
+  align-items: flex-start;
+}
+
+.client-panel-title {
+  font-size: var(--fs-xl);
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+}
+
+.client-panel-subtitle {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.client-pill {
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--light);
+}
+
+.client-list {
+  list-style: none;
+  margin: 0;
+  padding: 16px 0 0;
+  border-top: 1px solid var(--divider);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.client-title {
+  font-size: var(--fs-md);
+  font-weight: 600;
+}
+
+.client-meta {
+  font-size: var(--fs-xs);
+  color: var(--text-faint);
+}

@@ -1,0 +1,175 @@
+/* =========================================================
+   NOT FOUND PAGE
+   ========================================================= */
+.not-found {
+    align-items: center;
+    gap: 24px;
+    padding-top: 6vh;
+    text-align: center;
+}
+
+.not-found-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.not-found-code {
+    font-size: clamp(4.5rem, 14vw, 7.5rem);
+    font-weight: 800;
+    letter-spacing: -0.05em;
+    line-height: 0.9;
+}
+
+.not-found-title {
+    font-size: var(--fs-xl);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+}
+
+.not-found-text {
+    max-width: 46ch;
+    font-size: var(--fs-md);
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+
+.not-found-path {
+    padding: 2px 6px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: var(--fs-sm);
+    color: var(--text);
+    background: var(--surface-sunken);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    word-break: break-all;
+}
+
+.not-found-links {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    padding-top: 20px;
+    border-top: 1px solid var(--divider);
+    width: min(420px, 100%);
+}
+
+.not-found-links-label {
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+}
+
+.not-found-links-list {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+}
+
+.not-found-links-list .btn {
+    color: var(--text-muted);
+    border-color: transparent;
+}
+
+.not-found-links-list .btn:hover {
+    color: var(--text);
+}
+
+/* =========================================================
+   ILLUSTRATION
+   ========================================================= */
+.nf-illustration {
+    width: min(360px, 100%);
+    height: auto;
+    color: var(--text);
+}
+
+.nf-stop-start { stop-color: var(--success); }
+.nf-stop-end   { stop-color: var(--info); }
+
+.nf-star {
+    fill: currentColor;
+    animation: nf-twinkle 3s ease-in-out infinite;
+}
+
+.nf-orbit-path {
+    fill: none;
+    stroke: var(--border-strong);
+    stroke-width: 1;
+    stroke-dasharray: 3 6;
+}
+
+.nf-ring {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.35);
+    stroke-width: 3;
+    stroke-linecap: round;
+}
+
+.nf-band {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.14);
+    stroke-width: 8;
+    stroke-linecap: round;
+}
+
+.nf-shadow {
+    fill: #000;
+    opacity: 0.2;
+}
+
+.nf-crater {
+    fill: #000;
+    opacity: 0.16;
+}
+
+.nf-satellite-body {
+    fill: var(--light);
+}
+
+.nf-satellite-panel {
+    fill: var(--text-faint);
+}
+
+.nf-satellite-antenna {
+    stroke: var(--light);
+    stroke-width: 2;
+    stroke-linecap: round;
+}
+
+/* The planet group bobs gently */
+.nf-float {
+    animation: nf-float 6s ease-in-out infinite;
+}
+
+/* The satellite circles the planet's centre */
+.nf-orbit {
+    transform-box: view-box;
+    transform-origin: 200px 170px;
+    animation: nf-orbit 24s linear infinite;
+}
+
+@keyframes nf-twinkle {
+    0%, 100% { opacity: 0.9; }
+    50%      { opacity: 0.25; }
+}
+
+@keyframes nf-float {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-6px); }
+}
+
+@keyframes nf-orbit {
+    to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nf-star,
+    .nf-float,
+    .nf-orbit {
+        animation: none;
+    }
+}

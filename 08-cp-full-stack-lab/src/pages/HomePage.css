@@ -1,0 +1,115 @@
+/* =========================================================
+   HOME PAGE
+   ========================================================= */
+
+.home-header {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.home-title {
+    font-size: var(--fs-2xl);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+}
+
+.home-lead {
+    max-width: 52ch;
+    font-size: var(--fs-md);
+    line-height: 1.5;
+    color: var(--text-muted);
+}
+
+/* =========================================================
+   CARDS
+   ========================================================= */
+.home-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+}
+
+.home-card {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    min-height: 180px;
+    padding: 20px;
+    color: var(--text);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.home-card:hover {
+    border-color: var(--border-strong);
+    background: var(--surface-sunken);
+}
+
+.home-card:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.home-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    color: var(--text-muted);
+    background: var(--surface-button);
+    border-radius: var(--radius-control);
+    transition: color 150ms ease;
+}
+
+.home-card-text {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.home-card-title {
+    font-size: var(--fs-lg);
+    font-weight: 600;
+}
+
+.home-card-description {
+    font-size: var(--fs-sm);
+    color: var(--text-muted);
+}
+
+.home-card-arrow {
+    margin-top: auto;
+    align-self: flex-end;
+    color: var(--text-faint);
+    transition: transform 150ms ease, color 150ms ease;
+}
+
+/* The card's state drives its children */
+.home-card:hover .home-card-icon,
+.home-card:focus-visible .home-card-icon {
+    color: var(--text);
+}
+
+.home-card:hover .home-card-arrow,
+.home-card:focus-visible .home-card-arrow {
+    color: var(--text);
+    transform: translateX(3px);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .home-card,
+    .home-card-icon,
+    .home-card-arrow {
+        transition: none;
+    }
+
+    .home-card:hover .home-card-arrow,
+    .home-card:focus-visible .home-card-arrow {
+        transform: none;
+    }
+}
