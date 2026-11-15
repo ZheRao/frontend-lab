@@ -4,10 +4,11 @@ Nov 11, 2026 · @zhe
 
 ## Status and revision history
 
-The crop plan experiments are now two labs instead of five: **Lab 07 (frontend, including async against a fake service)** and **Lab 08 (full stack)**. Lab 06 (React Router) is complete. Lab 07 Part A is complete; Part B (async) is next.
+The crop plan experiments are now two labs instead of five: **Lab 07 (frontend, including async against a fake service)** and **Lab 08 (full stack)**. Lab 06 (React Router) is complete. Lab 07 is complete as of 2026-11-15, including Part B; Lab 08 is next.
 
 | Revision | Date | Change |
 | --- | --- | --- |
+| 3 | 2026-11-15 | Lab 07 closed. Error-outcome classification, fake failure injection and persistence after reload moved to Lab 08. |
 | 2 | 2026-11-11 | Collapsed Labs 07–11 into Lab 07 (frontend) and Lab 08 (full stack). Resolver and its tests moved into Lab 07. Crop editor page removed in favor of a field dialog on the overview. |
 | 1 | 2026-11-02 | Original sequence: 07 static UI, 08 state and resolution, 09 database, 10 HTTP contract, 11 integration. |
 
@@ -50,7 +51,7 @@ Lab 07 ends when the full user journey works against a fake service that behaves
 
 ## Lab 07 — Crop Plan Frontend
 
-Part A is complete as of 2026-11-11. Part B (async against a fake service) is next.
+Part A was completed on 2026-11-11 and Part B on 2026-11-15. Patterns are recorded in the Lab 07 Part A and Part B docs.
 
 ### Part A — completed
 
@@ -65,14 +66,19 @@ Part A is complete as of 2026-11-11. Part B (async against a fake service) is ne
 | Add crop | Inline crop select, draft card with all fields missing, draft visible only at revision 1 for its client and year. |
 | CSS | Tokens and shared components in `styles/`; feature CSS per feature; crop field classes renamed `.crop-field*`. |
 
-### Part B — remaining scope
+### Part B — completed
 
-1. **Fake service** shaped as the Lab 08 contract: private in-memory store, simulated delay, controllable failures, server-assigned `id` and `createdAt`.
-2. **Bundle loading:** request on client and year change, loading and read-error states (UI-13 returns), stale-response protection when the context changes mid-request.
-3. **Input validation in the dialog:** empty or non-numeric values are blocked inline and never reach the service; zero is accepted.
-4. **Saving:** request lock against double submits, pending state, success refetches the bundle and closes the dialog, the draft crop becomes a real card through the derived rule.
-5. **Outcomes:** rejected returns to the draft with a message; retryable offers retry; unknown reconciles by refetching.
-6. **Close-out:** manual walkthrough checklist, Lab 07 patterns doc Part B, spec and roadmap updates.
+| Area | Outcome |
+| --- | --- |
+| Fake service | `getCropPlan` and `createRecord`, 1000 ms delay, module-level store; kept minimal because Lab 08 replaces it |
+| Loading | Plan stored with its client and year; effect keyed on client and year; displayed only when it matches the URL |
+| Read sequencing | Numbered reads with three outcomes (`succeeded`, `failed`, `stale`); no read lock; only the latest read sets plan, state or errors |
+| Writes | Guarded `runWrite` with request lock, pending state, refresh as part of the write, success dialog; a stale write refresh clears only its own pending state |
+| Validation | Non-empty, finite, non-negative; zero allowed; validation errors return to the dialog with the draft |
+| Busy handling | Esc blocked, dialog actions disabled, writes refused while loading, pending or an error is open |
+| Walkthrough | All manual checks passed except INT-06 (persistence after reload), which needs the real backend |
+
+**Moved to Lab 08:** classifying write failures (rejected, retryable, unknown) with automated tests, server-side validation and timestamps, and INT-06.
 
 ## Lab 08 — Crop Plan Full Stack
 
@@ -106,7 +112,7 @@ Every contract below must stay true from the lab that first proved it onward.
 | A crop's first input is committed in revision 1 | 07A | Manual walkthrough |
 | A draft crop is never persisted before its first save | 07A | Manual walkthrough |
 | Historical rows are append-only; id and timestamp are server-assigned | 07B (fake) / 08 (real) | Service tests |
-| Validation, rejected, retryable and unknown outcomes do not mislead the UI | 07B | Manual walkthrough; adapter tests in 08 |
+| Invalid input is never submitted (07B); rejected, retryable and unknown outcomes do not mislead the UI (08) | 07B | Manual walkthrough; adapter tests in 08 |
 | The resolver's input and output do not change between fake and real backends | 08 | Same resolver tests against real bundles |
 
 ## Known limitations and open decisions
@@ -115,12 +121,14 @@ Every contract below must stay true from the lab that first proved it onward.
 
 | Limitation | Effect | Revisit |
 | --- | --- | --- |
+| Write failures | Every failure is treated as an unknown outcome, so a rejected input loses its draft | 08 |
+| Persistence after reload | The fake service resets on reload; INT-06 untestable | 08 |
+| Draft crop and other saves | Saving any field discards an unsaved draft crop | If users find it disruptive |
+| Loading flash | For one paint after a context change, the crops section can show as empty | If it becomes visible with real latency |
 | Malformed year (`year=abc`) | Classified as partial instead of invalid | When hardening the gate |
-| Revision validity | Gate validates against the full catalog, while offered revisions depend on the data | Before saves land (07B) |
-| Crop card order | Follows object key order (numeric crop id), not catalog order | If display order ever matters |
+| Revision validity | Gate validates against the full catalog, while offered revisions depend on the data | 08 |
+| Crop card order | Follows numeric crop id, not catalog order | If display order ever matters |
 | Forecast years | Hard-coded list | When a years table exists |
-| Field dialog after back then forward | Could reopen empty, because the edit context is hidden rather than cleared | 07B |
-| Empty value | Currently logs as 0; inline validation planned | 07B |
 | Client ids in tests | Uniqueness and row references to clients are not tested; the database guarantees them | 08 |
 
 ### Open decisions
@@ -130,8 +138,9 @@ Every contract below must stay true from the lab that first proved it onward.
 | Does the forecast engine need every category in revision 1, or only the crop? | Before 08 | If all ten are required, a completeness rule is needed, which the spec currently excludes. |
 | Tie-break rule shared with the engine | 08 | Frontend uses highest id within the winning revision; the engine currently uses latest timestamp. They must agree. |
 | Decimal representation in SQLite | 08 | Numbers in the frontend; storage precision to decide. |
-| Identical value and memo resubmission | 07B | New version or no-op. |
-| Unknown-outcome and retry details for appends | 07B | Reuse the Lab 03–04 reconciliation pattern. |
+| Identical value and memo resubmission (D-13) | 08 | New version or no-op. |
+| Error classes and recoveries for appends | 08 | Rejected and retryable return to edit; unknown refreshes. Reuse the Lab 03–04 pattern. |
+| Abort superseded reads | 08 | `AbortController` with real `fetch`, on top of read sequencing. |
 | Per-category decimal display | Later | Current rule: integers plain, decimals to two places. |
 
 ## Backlog and documentation protocol
@@ -156,3 +165,9 @@ Every contract below must stay true from the lab that first proved it onward.
 ### Definition of done for Part 2
 
 An internal user can choose a client, year and available revision; add a crop from the catalog; commit individual values with memos; see inherited values and their source revision; and view the selected revision's field history. SQLite and FastAPI provide authoritative persistence and errors, and Client CRUD regression tests still pass. Stop there for Phase 1.
+
+### Lab 08 kickoff prompt
+
+Copy this into a new thread, with this roadmap, the specification (v2) and both Lab 07 patterns docs attached:
+
+> We're beginning Lab 08 — Crop Plan Full Stack for the GrowLytics frontend and backend. Lab 07 is complete: the crop plan overview, field dialog, Add crop, frontend resolver with tests, and async handling all work against a fake service with `getCropPlan(clientId, forecastYear)` and `createRecord(row)`. Read the attached roadmap, spec and Lab 07 patterns docs as the governing handoff. The lab's question: can SQLite and FastAPI replace the fake service while preserving every Lab 07 behavior and Client CRUD? Start with the behavioral contract for the two endpoints (bundle read and append), their validation and error outcomes, and the schema; then the knowledge gaps, the smallest experiments, and the pytest and Vitest verification plan. Settle the open decisions listed in the roadmap as they become relevant. Reuse the Lab 04 HTTP contract and Lab 05 unit-of-work patterns.

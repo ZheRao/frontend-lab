@@ -9,7 +9,7 @@ import {
 import { formatValue } from './helpers.js'
 import { formatDate } from './helpers.js'
 
-function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop, catInfo, fieldInfo }) {
+function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop, catInfo, fieldInfo, isBusy }) {
     const dialogRef = useRef(null)
 
     useEffect(() => {
@@ -36,7 +36,6 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                 className="dialog-body" 
                 onSubmit={(event) => {
                     event.preventDefault()
-                    if (draft.value.trim() === '') return   // safeguard against empty draft value
                     onRequestSubmit({
                         clientId: Number(clientId),
                         forecastYear: Number(forecastYear),
@@ -91,6 +90,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                         className="input" 
                         inputMode="decimal"
                         value={draft.value}
+                        disabled={isBusy}
                         onChange={(event) => setDraft((prev) => ({...prev, value:event.target.value}))}
                     />
                 </label>
@@ -101,16 +101,17 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                         className="input" 
                         rows={2}
                         value={draft?.memo ?? ''}
+                        disabled={isBusy}
                         onChange={(event) => setDraft((prev) => ({...prev, memo:event.target.value}))}
                         // no memo inheritance 
                     />
                 </label>
 
                 <div className="actions">
-                    <button type="button" className="btn btn-secondary" onClick={onModalClose}>
+                    <button type="button" className="btn btn-secondary" onClick={onModalClose} disabled={isBusy}>
                         Cancel
                     </button>
-                    <button type="submit" className="btn btn-primary">
+                    <button type="submit" className="btn btn-primary" disabled={isBusy}>
                         Save
                     </button>
                 </div>
@@ -134,7 +135,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                                         {formatDate(record.createdAt)} · {record.createdBy}
                                     </span>
                                 </div>
-                                <p className={record.memo ? "history-entry__memo" : "history-entry__memo history-emtry__memo--empty"}>
+                                <p className={record.memo ? "history-entry__memo" : "history-entry__memo history-entry__memo--empty"}>
                                     {record.memo ?? "No memo"}
                                 </p>
                             </li>

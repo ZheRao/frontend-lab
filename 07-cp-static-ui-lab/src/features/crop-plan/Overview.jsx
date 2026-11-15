@@ -53,9 +53,9 @@ function Overview() {
     const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
 
     // sync reference
-    const refreshLock = useRef(false)   // prevent duplicated refresh
     const requestLock = useRef(false)   // prevent duplicated mutation request
     const requestNum = useRef(0)        // identify stale requests
+    const readNum = useRef(0)           // identify stale reads
 
     // states
     //  crop plan data
@@ -147,27 +147,29 @@ function Overview() {
 
     // async functions
     const refresh = async ({ partOfWrite = false } = {}) => {
-        if (refreshLock.current) return 'skipped'
+        const currentRead = ++readNum.current
         setEditContext(null)    // when refreshing, always reset edit context for field editor
-        // setDraftCrop(null)  // when refreshing, always reset drop crop into null
+        setDraftCrop(null)  // when refreshing, always reset drop crop into null
         if (!partOfWrite) {
             // if this refresh is part of mutation, the system is already in 'pending', no need to set it to 'loading'
             setSysState('loading')
         }
-        refreshLock.current = true
         try {
             const rows = await getCropPlan(clientId, forecastYear)
-            setLoadedPlan({
-                clientId,
-                forecastYear,
-                rows
-            })
-            return 'succeeded'
+            if (currentRead === readNum.current) {
+                setLoadedPlan({
+                    clientId,
+                    forecastYear,
+                    rows
+                })
+                return 'succeeded'
+            }
+            return 'stale'
         } catch (err) {
+            if (currentRead !== readNum.current) return 'stale'
             return 'failed'
         } finally {
-            refreshLock.current = false
-            if (!partOfWrite) {
+            if (!partOfWrite && currentRead === readNum.current) {
                 // if this is part of mutation, the state will be set to 'success', so shouldn't set it to 'idle'
                 setSysState('idle') // if there's error, system is still busy because error !== null, reset system state to idle
             }
@@ -202,6 +204,9 @@ function Overview() {
             if (refreshResult === 'succeeded') {
                 setSysState('success')
                 // onDone of success dialog need to set sys state back to 'idle'
+            } else if (refreshResult === 'stale') {
+                setSysState((current) => current==="pending" ? "idle" : current)    // clear writer's pending, but if the system is under another loading, leave it along
+                return
             } else {
                 setSysState('idle')
                 setError({
@@ -316,7 +321,7 @@ function Overview() {
 
         const valueConverted = Number(value)
 
-        if (Number.isNaN(valueConverted)) {
+        if (!Number.isFinite(valueConverted)) {
             setError({
                 type: "validation", 
                 title: "Invalid Value", 
@@ -330,7 +335,7 @@ function Overview() {
                 type: "validation", 
                 title: "Invalid Value", 
                 code: "INVALID_VALUE",
-                message: "Value must be positive",
+                message: "Value must be non-negative",
                 recovery: "return-to-edit"
             })
             return
@@ -502,6 +507,7 @@ function Overview() {
                     crop={editingCrop}
                     catInfo={editingCategory}
                     fieldInfo={editingField}
+                    isBusy={isSystemBusy}
                 />
             )}
 

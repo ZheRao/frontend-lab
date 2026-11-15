@@ -1,8 +1,5 @@
 // features/crop-plan/CropCard.jsx
 
-// crop -> {id, name}
-// fields -> { "unit_prce": { id, revisionId, isInherited, history, ... } , ... }
-// categories -> { key, label, cropYear, unit } 
 
 import { cardGroups } from "./sampleData"
 import CropField from './CropField'
