@@ -1,9 +1,11 @@
+# tests/clients/test_client_service.py
+
 import sqlite3
 import pytest 
 
 from app.conventions import BackendKeys, OutcomeKind
 from app.services.client_service import client_list, append_client, modify_client, remove_client
-from tests.helpers import committed_names
+from tests.clients.helpers import committed_names
 
 from app.db.sqlite_connection import unit_of_work
 

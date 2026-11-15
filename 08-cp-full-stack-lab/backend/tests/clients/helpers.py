@@ -1,3 +1,5 @@
+# tests/clients/helpers.py
+
 from app.db.sqlite_connection import unit_of_work
 from app.services.naming import string_normalize
 

@@ -1,6 +1,10 @@
+# tests/db/test_unit_of_work.py
+
 import pytest 
 from app.db.sqlite_connection import unit_of_work
-from tests.helpers import insert_client, committed_names 
+from tests.clients.helpers import insert_client, committed_names 
+
+#   --- clients ---------------------------------------------------------------------------------
 
 def test_commits_on_success(db_path):
     with unit_of_work(db_path) as conn:

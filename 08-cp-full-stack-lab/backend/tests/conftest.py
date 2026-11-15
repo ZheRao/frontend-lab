@@ -1,8 +1,10 @@
+# tests/conftest.py
+
 import sqlite3, os
 from pathlib import Path 
 import pytest 
 from fastapi.testclient import TestClient 
-from main import app 
+from app.main import app 
 
 SCHEMA_SQL = (Path(__file__).resolve().parent.parent / "app" / "db" / "schema.sql").read_text()
 
@@ -24,13 +26,13 @@ def db_without_schema(tmp_path):
 @pytest.fixture
 def api(db_path, monkeypatch):
     """Routes use this test's fresh database."""
-    monkeypatch.setattr("main.DB_PATH", db_path)
+    monkeypatch.setattr("app.config.DB_PATH", db_path)
     return TestClient(app)
 
 @pytest.fixture 
 def api_no_raise(db_without_schema, monkeypatch):
     """Routes hit a database with no tables: unhandled errors become 500 responses."""
-    monkeypatch.setattr("main.DB_PATH", db_without_schema)
+    monkeypatch.setattr("app.config.DB_PATH", db_without_schema)
     return TestClient(app, raise_server_exceptions=False)
 
 @pytest.fixture 

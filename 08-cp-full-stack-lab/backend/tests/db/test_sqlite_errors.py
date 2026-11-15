@@ -1,9 +1,13 @@
+# tests/db/test_sqlite_errors.py
+
 import sqlite3 
 import pytest 
 from app.conventions import DBErrorKind
 from app.db.sqlite_connection import unit_of_work
 from app.db.sqlite_errors import translate_sqlite_error
-from tests.helpers import insert_client, committed_names 
+from tests.clients.helpers import insert_client, committed_names 
+
+#   --- clients ----------------------------------------------------------------------------------------------------
 
 def test_duplicate_is_unique_and_rolls_back_whole_unit(db_path):
     with pytest.raises(sqlite3.IntegrityError) as exc_info:

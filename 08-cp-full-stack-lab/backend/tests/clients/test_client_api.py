@@ -1,9 +1,11 @@
+# tests/clients/test_client_api.py
+
 import sqlite3 
 import pytest 
 from fastapi.testclient import TestClient 
 
-from main import app 
-from tests.helpers import committed_names
+from app.main import app 
+from tests.clients.helpers import committed_names
 from app.db.sqlite_connection import unit_of_work
 
 

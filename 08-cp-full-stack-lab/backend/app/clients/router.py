@@ -1,35 +1,21 @@
-from fastapi import FastAPI, HTTPException, status
-from fastapi.middleware.cors import CORSMiddleware
+# app/clients/router.py
 
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, status
 
-from app.services.client_service import append_client, client_list, modify_client, remove_client
-from app.config import DB_PATH
+from app.clients.service import client_list, append_client, modify_client, remove_client
+from app.clients.schemas import Client, ClientModifyRequest
+import app.config as config
 from app.conventions import OutcomeKind, BackendKeys
 
 OUTCOME = BackendKeys.OUTCOME
 RESULT = BackendKeys.RESULT
 
-class ClientModifyRequest(BaseModel):
-    name: str
 
-class Client(BaseModel):
-    id: int
-    name: str 
-    modified_by: str
+router = APIRouter(prefix="/clients", tags=["clients"])
 
-app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
-    allow_methods=["POST", "GET", "PATCH", "DELETE"],
-    allow_headers=["*"]
-)
-
-@app.get("/clients", response_model=list[Client], status_code=status.HTTP_200_OK)
+@router.get("", response_model=list[Client], status_code=status.HTTP_200_OK)
 def get_client():
-    result = client_list(DB_PATH)
+    result = client_list(config.DB_PATH)
     if result[OUTCOME] == OutcomeKind.REFRESHED:
         return result[RESULT]
     elif result[OUTCOME] == OutcomeKind.DATABASE_BUSY:
@@ -43,9 +29,9 @@ def get_client():
     else:
         raise RuntimeError("refresh failed in the backend")
 
-@app.post("/clients", status_code=status.HTTP_201_CREATED, response_model=Client)
+@router.post("", status_code=status.HTTP_201_CREATED, response_model=Client)
 def create_client(payload: ClientModifyRequest):
-    result = append_client(DB_PATH, name=payload.name)
+    result = append_client(config.DB_PATH, name=payload.name)
 
     if result[OUTCOME]==OutcomeKind.CREATED:
         return result[RESULT]
@@ -77,9 +63,9 @@ def create_client(payload: ClientModifyRequest):
     raise RuntimeError("Unrecognized business outcome")
 
 
-@app.patch("/clients/{client_id}", response_model=Client, status_code=status.HTTP_200_OK)
+@router.patch("/{client_id}", response_model=Client, status_code=status.HTTP_200_OK)
 def update_client(client_id: int, payload: ClientModifyRequest):
-    result = modify_client(DB_PATH, client_id, payload.name)
+    result = modify_client(config.DB_PATH, client_id, payload.name)
 
     if result[OUTCOME] == OutcomeKind.UPDATED:
         return result[RESULT]
@@ -117,9 +103,9 @@ def update_client(client_id: int, payload: ClientModifyRequest):
         )
     raise RuntimeError("Unrecognized business outcome")
 
-@app.delete("/clients/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{client_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_client(client_id: int):
-    result = remove_client(DB_PATH, client_id)
+    result = remove_client(config.DB_PATH, client_id)
 
     if result[OUTCOME] == OutcomeKind.DELETED:
         return 

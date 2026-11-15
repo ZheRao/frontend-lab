@@ -1,3 +1,5 @@
+# tests/clients/test_client_naming.py
+
 import pytest 
 from app.services.naming import string_normalize
 
