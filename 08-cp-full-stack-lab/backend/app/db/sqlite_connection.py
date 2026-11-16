@@ -1,7 +1,7 @@
 import sqlite3
 from contextlib import contextmanager
 
-from app.config import BUSY_TIMEOUT
+import app.config as config
 
 import time
 
@@ -10,7 +10,7 @@ def get_connection(db_path: str, timeout: float|None = None) -> sqlite3.Connecti
     Establish a connection, enable and verify foreign-key enforcement, return the configured connection
     """
     if timeout is None:
-        timeout = BUSY_TIMEOUT
+        timeout = config.BUSY_TIMEOUT
     conn = sqlite3.connect(db_path, autocommit=True, timeout=timeout)
     try:
         conn.execute("PRAGMA foreign_keys = ON")
@@ -34,7 +34,7 @@ def unit_of_work(db_path: str, timeout: float|None = None):
         - close the connection
     """
     if timeout is None:
-        timeout = BUSY_TIMEOUT
+        timeout = config.BUSY_TIMEOUT
     try:
         conn = get_connection(db_path, timeout=timeout)
     except RuntimeError as err:

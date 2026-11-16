@@ -3,9 +3,9 @@ import { describe, test, expect } from "vitest"
 import { resolver, formatValue } from "./helpers"
 
 const revisions = [
-    { id: 1, name: "Pre-seeding", order: 1 },
-    { id: 2, name: "Post-seeding", order: 2 },
-    { id: 3, name: "Pre-harvest", order: 3}
+    { id: 1, name: "Pre-seeding", revision_order: 1 },
+    { id: 2, name: "Post-seeding", revision_order: 2 },
+    { id: 3, name: "Pre-harvest", revision_order: 3}
 ]
 
 const categories = [

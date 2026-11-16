@@ -246,7 +246,7 @@ function Overview() {
     const editingField = editContext === null ? undefined : resolvedData[editContext.cropId]?.[editingCategory.key]
 
     // transform catelog data
-    const sortedRevisions = [...revisions].sort((a,b )=> a.order - b.order)
+    const sortedRevisions = [...revisions].sort((a,b )=> a.revision_order - b.revision_order)
 
     // error handling
     const handleErrorRecovery = async () => {
@@ -416,7 +416,7 @@ function Overview() {
                             </div>
                             <div className="revision-group" role="group" aria-labelledby='revision-label'>
                                 {(Object.keys(resolvedData).length === 0 
-                                    ? sortedRevisions.filter((rev) => rev.order === 1)
+                                    ? sortedRevisions.filter((rev) => rev.revision_order === 1)
                                     : sortedRevisions
                                 ).map((rev) => {
                                     const isSelected = String(rev.id) === revisionId 
@@ -430,7 +430,7 @@ function Overview() {
                                                 updateContext("revision", String(rev.id))
                                             }}
                                         >
-                                            {rev.order} · {rev.name}
+                                            {rev.revision_order} · {rev.name}
                                         </button>
                                     )
                                 })}

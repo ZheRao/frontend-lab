@@ -15,7 +15,11 @@ def main():
     conn.executescript(SCHEMA_SQL)
     conn.execute("PRAGMA journal_mode = WAL")
     client_id = conn.execute("INSERT INTO clients (name, name_standardized, modified_by) VALUES (?, ?, ?) RETURNING id", ("Farm A", "farm_a", "Zhe")).fetchone()[0]
-    conn.execute("INSERT INTO client_note (client_id, note) VALUES (?, ?)", (client_id, "test"))
+    conn.execute("""
+                INSERT INTO crop_plan (client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo)
+                VALUES (?,?,?,?,?,?,?,?)
+                """,
+                (client_id, 2026, 1, 1, 'acres', 2000, "Zhe", "First auto insert to crop-plan"))
     conn.commit()
     conn.close()
     

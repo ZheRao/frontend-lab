@@ -52,7 +52,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                     <div className="field-dialog__title-row">
                         <h3 className="dialog-title">{catInfo.label}</h3>
                         <p className="field-dialog__context">
-                            {client.name} · {forecastYear} · Rev {revision.order} · {revision.name}
+                            {client.name} · {forecastYear} · Rev {revision.revision_order} · {revision.name}
                         </p>
                     </div>
                     <span className="field-dialog__crop">{crop.name}</span>
@@ -70,7 +70,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                     ) : fieldInfo.isInherited ? (
                         <span className="field-dialog__status">
                             <span className="indicator indicator--inherited" aria-hidden="true" />
-                            Inherited from Rev {recordRevision?.order} · {recordRevision?.name}
+                            Inherited from Rev {recordRevision?.revision_order} · {recordRevision?.name}
                         </span>
                     ) : (
                         <span className="field-dialog__status">
@@ -119,7 +119,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
 
             <section className="field-dialog__history" aria-labelledby="history-title">
                 <h4 id="history-title" className="field-dialog__history-title">
-                    History in Rev {revision.order}
+                    History in Rev {revision.revision_order}
                 </h4>
                 {fieldInfo && fieldInfo.history.length !== 0 ? (
                     <ol className="history-list">
@@ -142,7 +142,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                         ))}
                     </ol>
                 ) : (
-                    <p className="field-dialog__empty">No edits in Rev {revision.order}</p>
+                    <p className="field-dialog__empty">No edits in Rev {revision.revision_order}</p>
                 )}
             </section>
         </dialog>

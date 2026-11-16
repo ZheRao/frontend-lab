@@ -1,11 +1,12 @@
 # app/clients/router.py
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 
 from app.clients.service import client_list, append_client, modify_client, remove_client
 from app.clients.schemas import Client, ClientModifyRequest
 import app.config as config
 from app.conventions import OutcomeKind, BackendKeys
+from app.identity import current_user
 
 OUTCOME = BackendKeys.OUTCOME
 RESULT = BackendKeys.RESULT
@@ -30,8 +31,8 @@ def get_client():
         raise RuntimeError("refresh failed in the backend")
 
 @router.post("", status_code=status.HTTP_201_CREATED, response_model=Client)
-def create_client(payload: ClientModifyRequest):
-    result = append_client(config.DB_PATH, name=payload.name)
+def create_client(payload: ClientModifyRequest, user: str = Depends(current_user)):
+    result = append_client(config.DB_PATH, name=payload.name, modified_by=user)
 
     if result[OUTCOME]==OutcomeKind.CREATED:
         return result[RESULT]
@@ -64,8 +65,8 @@ def create_client(payload: ClientModifyRequest):
 
 
 @router.patch("/{client_id}", response_model=Client, status_code=status.HTTP_200_OK)
-def update_client(client_id: int, payload: ClientModifyRequest):
-    result = modify_client(config.DB_PATH, client_id, payload.name)
+def update_client(client_id: int, payload: ClientModifyRequest, user: str = Depends(current_user)):
+    result = modify_client(config.DB_PATH, client_id, payload.name, modified_by=user)
 
     if result[OUTCOME] == OutcomeKind.UPDATED:
         return result[RESULT]

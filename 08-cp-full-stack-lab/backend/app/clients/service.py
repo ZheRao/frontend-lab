@@ -33,7 +33,7 @@ def client_list(db_path:str) -> dict[str,list[dict[str,str|int]]|str]:
         }
 
 
-def append_client(db_path:str, name: str, modified_by: str="TEST USER") -> dict[str, dict[str,str|int]|str]:
+def append_client(db_path:str, name: str, modified_by: str) -> dict[str, dict[str,str|int]|str]:
     name_standardized = string_normalize(name)
     if name_standardized == "":
         return {
@@ -68,7 +68,7 @@ def append_client(db_path:str, name: str, modified_by: str="TEST USER") -> dict[
             BackendKeys.OUTCOME: OutcomeKind.UNKNOWN
         }
 
-def modify_client(db_path: str, client_id: int, name: str, modified_by: str = "Test User") -> dict[str, dict[str,str|int]|str]:
+def modify_client(db_path: str, client_id: int, name: str, modified_by: str) -> dict[str, dict[str,str|int]|str]:
     name_standardized = string_normalize(name)
     if name_standardized == "":
         return {

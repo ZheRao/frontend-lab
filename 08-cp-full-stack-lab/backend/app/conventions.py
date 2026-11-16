@@ -18,11 +18,13 @@ class OutcomeKind(StrEnum):
     CREATED = "created"
     DUPLICATED = "duplicated"
     INVALID_NAME = "invalid_name"
+    INVALID_VALUE = "invalid_value"
     DATABASE_BUSY = "database_busy"
     NOT_FOUND = "not_found"
     UPDATED = "updated"
     DELETED = "deleted"
     REFERENCED = "referenced"
+    INVALID_REFERENCE = "invalid_reference"
     UNKNOWN = "unknown"
 
 class BackendKeys(StrEnum):

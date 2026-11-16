@@ -29,7 +29,7 @@ function sortRawDataOnRevision (filtered) {
     // sort all records once, so when they are being allocated into the data shape frontend expects, no re-ording nor re-allocation required
     const sorted = [...filtered].sort((a,b) => {
         if (a.revisionId !== b.revisionId) {
-            return b.order - a.order
+            return b.revision_order - a.revision_order
         } else {
             return b.id - a.id
         }
@@ -38,15 +38,15 @@ function sortRawDataOnRevision (filtered) {
 }
 
 function filterRawDataOnRevision (rawData, targetRevisionOrder, revisions, categories) {
-    const revisionLookUp = new Map(revisions.map(revision => [revision.id, revision.order]))
+    const revisionLookUp = new Map(revisions.map(revision => [revision.id, revision.revision_order]))
     const mergedData = rawData.map((row) => {
-        const matched = {order: revisionLookUp.get(row.revisionId)}
+        const matched = {revision_order: revisionLookUp.get(row.revisionId)}
         return {
             ...row,
             ...matched
         }
     })
-    const filteredData = mergedData.filter((row) => (row.order <= targetRevisionOrder))
+    const filteredData = mergedData.filter((row) => (row.revision_order <= targetRevisionOrder))
     const sortedData = sortRawDataOnRevision(filteredData)
     const categoryMerged = mergeCategory(sortedData, categories)
     return categoryMerged
@@ -55,7 +55,7 @@ function filterRawDataOnRevision (rawData, targetRevisionOrder, revisions, categ
 
 export function resolver(rawData, targetRevision, revisions, categories) {
     if (rawData.length === 0) return {}   //safeguard against empty raw data due to filtering
-    const targetRevisionOrder = revisions.find(revision => (revision.id === targetRevision))?.order
+    const targetRevisionOrder = revisions.find(revision => (revision.id === targetRevision))?.revision_order
     if (targetRevisionOrder === undefined) return {} //safeguard against invalid revisions
     const processedData = filterRawDataOnRevision(rawData, targetRevisionOrder, revisions, categories)
     const resolvedData = {}
@@ -65,7 +65,7 @@ export function resolver(rawData, targetRevision, revisions, categories) {
             resolvedData[cropId] = {}
         }
         // the rows are already sorted DESC, if a category is empty, the first record filling the category would be the latest one
-        //  other rows would be pushed to the category's history, also in descending order, works out perfectly
+        //  other rows would be pushed to the category's history, also in descending revision_order, works out perfectly
         if (resolvedData[cropId][categoryKey] === undefined) {
             resolvedData[cropId][categoryKey] = dataSubset
             const isInherited = dataSubset.revisionId !== targetRevision

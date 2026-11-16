@@ -49,7 +49,7 @@ describe("catalog consistency", () => {
     })
 
     test("revision order values are unique", () => {
-        const allOrder = revisions.map((revision) => (revision.order))
+        const allOrder = revisions.map((revision) => (revision.revision_order))
         const uniqueOrder = new Set(allOrder)
         expect(allOrder.length).toBe(uniqueOrder.size)
     })
