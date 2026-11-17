@@ -1,7 +1,7 @@
 # tests/clients/test_client_naming.py
 
 import pytest 
-from app.services.naming import string_normalize
+from app.clients.naming import string_normalize
 
 @pytest.mark.parametrize("raw, expected", [
     ("Farm A", "farm_a"),

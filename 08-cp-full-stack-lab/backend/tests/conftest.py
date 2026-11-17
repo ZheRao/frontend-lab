@@ -38,7 +38,7 @@ def api_no_raise(db_without_schema, monkeypatch):
 @pytest.fixture 
 def write_blocker(db_path, monkeypatch):
     """Holds the write lock for the duration of a test, with a short busy timeout."""
-    monkeypatch.setattr("app.db.sqlite_connection.BUSY_TIMEOUT", 0.1)
+    monkeypatch.setattr("app.config.BUSY_TIMEOUT", 0.1)
     blocker = sqlite3.connect(db_path, autocommit=False)
     blocker.execute(
         "INSERT INTO clients (name, name_standardized, modified_by) VALUES (?, ?, ?)",
@@ -51,7 +51,7 @@ def write_blocker(db_path, monkeypatch):
 @pytest.fixture 
 def write_blocker2(db_path, monkeypatch):
     """Returns a function that takes the write lock when called. released after the test."""
-    monkeypatch.setattr("app.db.sqlite_connection.BUSY_TIMEOUT", 0.1)
+    monkeypatch.setattr("app.config.BUSY_TIMEOUT", 0.1)
     blockers = []
 
     def start():

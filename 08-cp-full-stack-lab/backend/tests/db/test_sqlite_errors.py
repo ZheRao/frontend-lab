@@ -40,7 +40,14 @@ def test_fk_delete_reference(db_path):
     with pytest.raises(sqlite3.IntegrityError) as exc_info:
         with unit_of_work(db_path) as conn:
             insert_client(conn, "Farm A")
-            conn.execute("INSERT INTO client_note (client_id, note) VALUES (?, ?)", (1, "Test Note"))
+            conn.execute(
+                        """
+                        INSERT INTO crop_plan (client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo)
+                        VALUES (?,?,?,?,?,?,?,?)
+                        RETURNING id, client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo, created_at
+                        """,
+                        (1, 2026, 1, 1, "unit_price", 80, "Test User", "Test")
+                    )
             conn.execute("DELETE FROM clients WHERE id=1")
     assert translate_sqlite_error(exc_info.value) == DBErrorKind.FOREIGN_KEY
     assert committed_names(db_path) == []
@@ -49,7 +56,14 @@ def test_fk_insert_orphan(db_path):
     with pytest.raises(sqlite3.IntegrityError) as exc_info:
         with unit_of_work(db_path) as conn:
             insert_client(conn, "Farm A")
-            conn.execute("INSERT INTO client_note (client_id, note) VALUES (?, ?)", (999, "Client doesn't exist"))
+            conn.execute(
+                        """
+                        INSERT INTO crop_plan (client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo)
+                        VALUES (?,?,?,?,?,?,?,?)
+                        RETURNING id, client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo, created_at
+                        """,
+                        (999, 2026, 1, 1, "unit_price", 80, "Test User", "Test")
+                    )
     assert translate_sqlite_error(exc_info.value) == DBErrorKind.FOREIGN_KEY
     assert committed_names(db_path) == []
 

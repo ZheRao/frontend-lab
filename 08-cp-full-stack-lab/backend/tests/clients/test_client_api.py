@@ -1,10 +1,5 @@
 # tests/clients/test_client_api.py
 
-import sqlite3 
-import pytest 
-from fastapi.testclient import TestClient 
-
-from app.main import app 
 from tests.clients.helpers import committed_names
 from app.db.sqlite_connection import unit_of_work
 
@@ -119,7 +114,14 @@ def test_delete_not_found(api):
 def test_delete_referenced(api, db_path):
     a_id = create(api, "Farm A")["id"]
     with unit_of_work(db_path) as conn:
-        conn.execute("INSERT INTO client_note (client_id, note) VALUES (?, ?)", (a_id, "Test"))
+        conn.execute(
+            """
+            INSERT INTO crop_plan (client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo)
+            VALUES (?,?,?,?,?,?,?,?)
+            RETURNING id, client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo, created_at
+            """,
+            (a_id, 2026, 1, 1, "unit_price", 80, "Test User", "Test")
+        )
     response = api.delete(f'/clients/{a_id}')
     assert_error(response, 409, "CLIENT_REFERENCED")
     assert committed_names(db_path) == ["Farm A"]

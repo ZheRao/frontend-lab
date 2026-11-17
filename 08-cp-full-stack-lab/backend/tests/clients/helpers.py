@@ -1,7 +1,7 @@
 # tests/clients/helpers.py
 
 from app.db.sqlite_connection import unit_of_work
-from app.services.naming import string_normalize
+from app.clients.naming import string_normalize
 
 INSERT_CLIENT = "INSERT INTO clients (name, name_standardized, modified_by) VALUES (?, ?, ?)"
 
