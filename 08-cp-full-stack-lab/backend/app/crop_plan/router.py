@@ -19,7 +19,7 @@ ERROR_DETAIL = {
     },
     "INVALID_VALUE": {
         "code": "INVALID_VALUE",
-        "message": "Field value cannot be empty, Not a Number, or being negative."
+        "message": "Field value should be a number, cannot be empty, or being negative."
     },
     "INVALID_REFERENCE": {
         "code": "INVALID_REFERENCE",

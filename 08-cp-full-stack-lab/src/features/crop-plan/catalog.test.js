@@ -30,10 +30,10 @@ describe("catalog consistency", () => {
         expect(allKeys.length).toEqual(uniqueKeys.size)
     })
 
-    test("prior key prefix matches cropYear", () => {
+    test("prior key prefix matches crop_year", () => {
         for (const category of categories) {
             expect(category.key.startsWith("prior."))
-                .toBe(category.cropYear === "prior")
+                .toBe(category.crop_year === "prior")
         }
     })
 

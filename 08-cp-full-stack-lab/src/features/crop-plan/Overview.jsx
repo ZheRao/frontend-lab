@@ -32,6 +32,8 @@ import ErrorDialog from '../../ErrorDialog.jsx'
 
 import FieldEditModal from './FieldEditModal.jsx'
 
+import { getClients } from '../clients/clientApi.js'
+
 const KNOWN_RECOVERIES = ['refresh', 'return-to-edit'] // 'refresh'- for field editor: close error + field editor + refresh, reset edit context
                                             // 'return-to-edit'- close error and return to field editor, draft/context preserved
 const REFRESH_FAILURE_ERROR = {

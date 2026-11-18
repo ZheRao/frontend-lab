@@ -33,16 +33,16 @@ export const revisions = [
 
 //  note: not handling MT yet
 export const categories = [
-    { key: "prior.quantity_inventory", cropYear: "prior", label: "Opening Inventory", unit: "bu" },
-    { key: "prior.unit_price", cropYear: "prior", label: "Unit Price (Prior)", unit: "$/bu" },
-    { key: "acres", cropYear: "current", label: "Acres", unit: "ac" },
-    { key: "unit_price", cropYear: "current", label: "Unit Price", unit: "$/bu" },
-    { key: "yield", cropYear: "current", label: "Yield / Acre", unit: "bu/ac" },
-    { key: "chem_cost", cropYear: "current", label: "Chem", unit: "$/ac" },
-    { key: "fert_cost", cropYear: "current", label: "Fert", unit: "$/ac" },
-    { key: "fuel_cost", cropYear: "current", label: "Fuel", unit: "$/ac" },
-    { key: "rent_cost", cropYear: "current", label: "Rent", unit: "$/ac" },
-    { key: "seed_cost", cropYear: "current", label: "Seed", unit: "$/ac" },
+    { key: "prior.quantity_inventory", crop_year: "prior", label: "Opening Inventory", unit: "bu" },
+    { key: "prior.unit_price", crop_year: "prior", label: "Unit Price (Prior)", unit: "$/bu" },
+    { key: "acres", crop_year: "current", label: "Acres", unit: "ac" },
+    { key: "unit_price", crop_year: "current", label: "Unit Price", unit: "$/bu" },
+    { key: "yield", crop_year: "current", label: "Yield / Acre", unit: "bu/ac" },
+    { key: "chem_cost", crop_year: "current", label: "Chem", unit: "$/ac" },
+    { key: "fert_cost", crop_year: "current", label: "Fert", unit: "$/ac" },
+    { key: "fuel_cost", crop_year: "current", label: "Fuel", unit: "$/ac" },
+    { key: "rent_cost", crop_year: "current", label: "Rent", unit: "$/ac" },
+    { key: "seed_cost", crop_year: "current", label: "Seed", unit: "$/ac" },
 ]
 
 
