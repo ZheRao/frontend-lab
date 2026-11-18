@@ -63,8 +63,8 @@ def create_crop_plan(payload: CropPlanCreateRequest, user:str = Depends(current_
         payload.revision_id,
         payload.category_key,
         payload.value,
+        user,
         payload.memo,
-        modified_by=user
     )
     if result[OUTCOME] == OutcomeKind.CREATED:
         return result[RESULT]

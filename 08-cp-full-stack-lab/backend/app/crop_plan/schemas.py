@@ -12,7 +12,7 @@ class CropPlanData(BaseModel):
     value: float
     modified_by: str 
     memo: str|None
-    createdAt: str
+    created_at: str
 
 class CropPlanCategory(BaseModel):
     key: str

@@ -75,8 +75,8 @@ def create_record(
     revision_id: int,
     category_key: str,
     value: float,
-    memo: str|None,
-    modified_by: str
+    modified_by: str,
+    memo: str|None = None,
 ) -> dict[str, str| dict[str,str|int|float]]:
     if value < 0:
         return {
