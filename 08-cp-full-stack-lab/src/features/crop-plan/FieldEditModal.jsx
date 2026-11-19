@@ -43,7 +43,6 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
                         revisionId: Number(revisionId),
                         categoryKey: catInfo.key,
                         value: draft.value,
-                        createdBy: "Test User",
                         memo: (draft.memo ?? '').trim() === '' ? null : draft.memo.trim()
                     })
                 }}

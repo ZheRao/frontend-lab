@@ -7,6 +7,7 @@ from app.db.sqlite_connection import unit_of_work
 OUTCOME = BackendKeys.OUTCOME
 RESULT = BackendKeys.RESULT
 
+import time
 
 
 def retrieve_records(
@@ -85,6 +86,7 @@ def create_record(
     
     try:
         with unit_of_work(db_path) as conn:
+            # time.sleep(5)
             cur = conn.execute(
                 """
                 INSERT INTO crop_plan (client_id, forecast_year, crop_id, revision_id, category_key, value, modified_by, memo)

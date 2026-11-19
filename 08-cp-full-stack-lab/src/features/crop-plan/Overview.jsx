@@ -14,10 +14,15 @@ import {
     resolver
 } from './helpers.js'
 
-import { 
+// import { 
+//     getCropPlan,
+//     createRecord
+// } from './fakeApi.js'
+
+import {
     getCropPlan,
-    createRecord
-} from './fakeApi.js'
+    createCropPlan
+} from './cropPlanApi.js'
 
 import CropCard from './CropCard.jsx'
 import './CropPlan.css'
@@ -25,7 +30,6 @@ import './CropPlan.css'
 import { 
     PendingDialog,
     SuccessDialog,
-    NoticeBanner
 } from '../../Dialogs.jsx'
 
 import ErrorDialog from '../../ErrorDialog.jsx'
@@ -33,6 +37,8 @@ import ErrorDialog from '../../ErrorDialog.jsx'
 import FieldEditModal from './FieldEditModal.jsx'
 
 import { getClients } from '../clients/clientApi.js'
+
+import { ApiError } from '../../ApiError.js'
 
 const KNOWN_RECOVERIES = ['refresh', 'return-to-edit'] // 'refresh'- for field editor: close error + field editor + refresh, reset edit context
                                             // 'return-to-edit'- close error and return to field editor, draft/context preserved
@@ -224,8 +230,15 @@ function Overview() {
             // set error and use recovery classifier to determine recovery if the result is not stale
             if (currentRequestNum !== requestNum.current) return 
             setSysState('idle')
-            if (false) {
-                // separate ApiError + non-retryable error handling branch later
+            console.log(err)
+            if (err instanceof ApiError && err.type === "non-retryable") {
+                setError({
+                    type: "non-retryable",
+                    code: err.code,
+                    title: "Request Rejected",
+                    message: err.message,
+                    recovery: "return-to-edit"
+                })
             } else {
                 setError(UNKNOWN_ERROR)
             }
@@ -251,6 +264,7 @@ function Overview() {
     const sortedRevisions = [...revisions].sort((a,b )=> a.revision_order - b.revision_order)
 
     // error handling
+
     const handleErrorRecovery = async () => {
         if (error === null) return 
 
@@ -306,7 +320,7 @@ function Overview() {
     }
 
 
-    const handleFieldSubmit = async ({ clientId, forecastYear, cropId, revisionId, categoryKey, value, createdBy, memo, }) => {
+    const handleFieldSubmit = async ({ clientId, forecastYear, cropId, revisionId, categoryKey, value, memo, }) => {
         if (sysState !== 'idle' || isSystemBusy || requestLock.current) return // safeguard against when system is not ready for a mutation
 
         // validate 'value' input
@@ -343,15 +357,14 @@ function Overview() {
             return
         }
 
-        await runWrite(() => createRecord({
+        await runWrite(() => createCropPlan({
             clientId,
             forecastYear,
             cropId,
             revisionId,
             categoryKey,
             value: valueConverted,
-            memo,
-            createdBy
+            memo
         }))
 
     }
