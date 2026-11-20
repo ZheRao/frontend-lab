@@ -2,14 +2,13 @@
 
 import { useRef, useEffect, useState } from 'react'
 import {
-    clients,
     revisions
 } from './sampleData.js'
 
 import { formatValue } from './helpers.js'
 import { formatDate } from './helpers.js'
 
-function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop, catInfo, fieldInfo, isBusy }) {
+function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop, catInfo, fieldInfo, isBusy, allClients }) {
     const dialogRef = useRef(null)
 
     useEffect(() => {
@@ -22,7 +21,7 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
     }, [open])
 
     const [clientId, forecastYear, revisionId] = contextKey.split("|")
-    const client = clients.find((client) => (client.id===Number(clientId)))
+    const client = allClients.find((client) => (client.id===Number(clientId)))
     const revision = revisions.find((rev) => (rev.id === Number(revisionId)))
     // inherited revision
     const recordRevisionId = fieldInfo?.revisionId
