@@ -2,10 +2,6 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { useSearchParams, } from 'react-router'
-import {
-    revisions,
-    crops
-} from './sampleData.js'
 
 import {
     urlStates,
@@ -37,6 +33,9 @@ import ErrorDialog from '../../ErrorDialog.jsx'
 import FieldEditModal from './FieldEditModal.jsx'
 
 import { getClients } from '../clients/clientApi.js'
+import { getCrops } from '../crops/cropsApi.js'
+import { getRevisions } from '../revisions/revisionsApi.js'
+import { getForecastYears } from '../forecast-years/forecastYearsApi.js'
 
 import { ApiError } from '../../ApiError.js'
 
@@ -68,8 +67,6 @@ const UNKNOWN_ERROR = {
 }
 
 function Overview() {
-    const forecastYears = [ 2026, 2027, 2028, 2029 ]  // list of Numbers, accepted limitation: hard coded forecast year, later maybe a separate year table?
-
     // sync reference
     const requestLock = useRef(false)   // prevent duplicated mutation request
     const requestNum = useRef(0)        // identify stale requests
@@ -83,8 +80,10 @@ function Overview() {
         clients: [],
         crops: [],
         revisions: [],
-        categories: []
+        categories: [],
+        forecast_years: []
     })
+    const forecastYears = catalog.forecast_years.map((year)=>(year.forecast_year))
     //  crop plan data
     const [loadedPlan, setLoadedPlan] = useState(null)  // { clientId, forecastYear, rows }
     //  system state
@@ -137,7 +136,7 @@ function Overview() {
         return list.map((item) => (item.id))
     }
     const validClientId = extractIds(catalog.clients)       // list of Numbers
-    const validRevisionId = extractIds(revisions)   // list of Numbers
+    const validRevisionId = extractIds(catalog.revisions)   // list of Numbers
     const currentUrlState = urlStates({
         rawClientId: clientId,
         clientList: validClientId,
@@ -193,9 +192,12 @@ function Overview() {
         }))
 
         try {
-            const [clients, categories] = await Promise.all([
+            const [clients, categories, revisions, crops, forecast_years] = await Promise.all([
                 getClients(),
-                getCropPlanCategory()
+                getCropPlanCategory(),
+                getRevisions(),
+                getCrops(),
+                getForecastYears()
             ])
 
             if (currentReadNum === catalogReadNum.current) {
@@ -203,7 +205,10 @@ function Overview() {
                     ...prev, 
                     status:'ready', 
                     clients: clients, 
-                    categories: categories
+                    categories: categories,
+                    crops: crops,
+                    revisions: revisions,
+                    forecast_years: forecast_years
                 }))
                 return 'succeeded'
             } else {
@@ -319,16 +324,16 @@ function Overview() {
 
     // resolve raw data
     const data = matchesCropPlanContext ? loadedPlan.rows : []
-    const resolvedData = currentUrlState !== 'valid' || !matchesCropPlanContext ? {} : resolver(data, Number(revisionId), revisions, catalog.categories)
+    const resolvedData = currentUrlState !== 'valid' || !matchesCropPlanContext ? {} : resolver(data, Number(revisionId), catalog.revisions, catalog.categories)
     const existingCrops = Object.keys(resolvedData)
-    const cropCandidates = crops.filter((crop)=>(!existingCrops.includes(String(crop.id))))
+    const cropCandidates = catalog.crops.filter((crop)=>(!existingCrops.includes(String(crop.id))))
     // look up values for eidting
-    const editingCrop = editContext === null ? undefined : crops.find((crop)=>(crop.id===editContext.cropId))
+    const editingCrop = editContext === null ? undefined : catalog.crops.find((crop)=>(crop.id===editContext.cropId))
     const editingCategory = editContext === null ? undefined : catalog.categories.find((cat)=>(cat.key===editContext.categoryKey))
     const editingField = editContext === null ? undefined : resolvedData[editContext.cropId]?.[editingCategory.key]
 
     // transform catelog data
-    const sortedRevisions = [...revisions].sort((a,b )=> a.revision_order - b.revision_order)
+    const sortedRevisions = [...catalog.revisions].sort((a,b )=> a.revision_order - b.revision_order)
 
     // error handling
 
@@ -586,11 +591,11 @@ function Overview() {
                                         <div className="crops__list">
                                             {visibleDraftCropId && (
                                                 <CropCard key={draftCrop.cropId} categories={catalog.categories} onFieldSelect={handleFieldSelect} fields={{}}
-                                                    crop={crops.find((crop)=>(crop.id===draftCrop.cropId))}
+                                                    crop={catalog.crops.find((crop)=>(crop.id===draftCrop.cropId))}
                                                 />
                                             )}
                                             {Object.entries(resolvedData).map(([cropId, fields]) => {
-                                                const crop = crops.find((crop) => crop.id === Number(cropId))
+                                                const crop = catalog.crops.find((crop) => crop.id === Number(cropId))
                                                 return <CropCard key={cropId} crop={crop} fields={fields} categories={catalog.categories} onFieldSelect={handleFieldSelect} />
                                             })}
                                         </div>
@@ -613,6 +618,7 @@ function Overview() {
                             fieldInfo={editingField}
                             isBusy={isSystemBusy}
                             allClients={catalog.clients}
+                            allRevisions={catalog.revisions}
                         />
                     )}
 

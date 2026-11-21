@@ -1,14 +1,11 @@
 // features/crop-plan/FieldEditModal.jsx
 
 import { useRef, useEffect, useState } from 'react'
-import {
-    revisions
-} from './sampleData.js'
 
 import { formatValue } from './helpers.js'
 import { formatDate } from './helpers.js'
 
-function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop, catInfo, fieldInfo, isBusy, allClients }) {
+function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop, catInfo, fieldInfo, isBusy, allClients ,allRevisions}) {
     const dialogRef = useRef(null)
 
     useEffect(() => {
@@ -22,10 +19,10 @@ function FieldEditModal({ open, onModalClose, onRequestSubmit, contextKey, crop,
 
     const [clientId, forecastYear, revisionId] = contextKey.split("|")
     const client = allClients.find((client) => (client.id===Number(clientId)))
-    const revision = revisions.find((rev) => (rev.id === Number(revisionId)))
+    const revision = allRevisions.find((rev) => (rev.id === Number(revisionId)))
     // inherited revision
     const recordRevisionId = fieldInfo?.revisionId
-    const recordRevision = revisions.find((rev) => (rev.id === recordRevisionId))
+    const recordRevision = allRevisions.find((rev) => (rev.id === recordRevisionId))
 
     const [draft, setDraft] = useState({ value: '', memo: null })    // on edit, setDraft({ value: ..., memo: ... })
 
