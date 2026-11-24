@@ -1,0 +1,197 @@
+/* =========================================================
+   SHELL
+   ========================================================= */
+.app-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.app-content {
+    flex: 1;
+    min-width: 0;
+    padding: 32px 32px 48px;
+}
+
+/* =========================================================
+   SIDEBAR — outer box animates width, inner keeps fixed width
+   ========================================================= */
+.sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    flex-shrink: 0;
+    overflow: hidden;
+    visibility: visible;
+    transition: width 200ms ease, visibility 0s linear 0s;
+}
+
+.sidebar--collapsed {
+    width: 0;
+    visibility: hidden;
+    transition: width 200ms ease, visibility 0s linear 200ms;
+}
+
+.sidebar-inner {
+    width: var(--sidebar-width);
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    padding: 24px 16px 20px;
+    border-right: 1px solid var(--divider);
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 4px;
+}
+
+.sidebar-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 0;
+}
+
+.sidebar-brand-mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    color: var(--text-on-light);
+    background: linear-gradient(135deg, var(--success), var(--info));
+    border-radius: var(--radius-control);
+}
+
+.sidebar-brand-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.sidebar-brand-name {
+    font-size: var(--fs-lg);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+}
+
+.sidebar-brand-tagline {
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+/* Label + nav sit closer together than the sidebar's main gap */
+.sidebar-section {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.sidebar-section-label {
+    padding: 0 12px;
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+/* =========================================================
+   NAV LINKS — base + active modifier
+   ========================================================= */
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 12px;
+    font-size: var(--fs-md);
+    font-weight: 500;
+    color: var(--text-muted);
+    text-decoration: none;
+    border-radius: var(--radius-control);
+    white-space: nowrap;
+}
+
+.sidebar-link:hover {
+    color: var(--text);
+    background: var(--surface-sunken);
+}
+
+.sidebar-link:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+/* :hover is listed too — see note on specificity */
+.sidebar-link--active,
+.sidebar-link--active:hover {
+    color: var(--text);
+    font-weight: 600;
+    background: var(--surface-button);
+}
+
+/* =========================================================
+   ICON BUTTONS — collapse (in sidebar) and expand (in main)
+   ========================================================= */
+.sidebar-icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    flex-shrink: 0;
+    color: var(--text-muted);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-control);
+    cursor: pointer;
+}
+
+.sidebar-icon-button:hover {
+    color: var(--text);
+    background: var(--surface-button);
+}
+
+.sidebar-icon-button:focus-visible {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.sidebar-expand-button {
+    margin-bottom: 16px;
+}
+
+.sidebar-footer {
+    margin-top: auto;
+    padding: 0 12px;
+    font-size: var(--fs-xs);
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+/* =========================================================
+   REDUCED MOTION — same convention as the spinner and banner
+   ========================================================= */
+@media (prefers-reduced-motion: reduce) {
+    .sidebar,
+    .sidebar--collapsed {
+        transition: none;
+    }
+}
