@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getCropPlan, createCropPlan } from './cropPlanApi'
 import { ApiError } from '../../ApiError'
 
-const CROP_PLAN_URL = "http://127.0.0.1:8000/crop-plan"
+const CROP_PLAN_URL = "http://127.0.0.1:8000/forecast/inputs/crop-plan"
 
 const apiRow = {
     id: 1, client_id: 1, forecast_year: 2026, crop_id: 1, revision_id: 1, 

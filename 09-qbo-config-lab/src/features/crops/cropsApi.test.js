@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getCrops } from './cropsApi'
 import { ApiError } from '../../ApiError'
 
-const CROPS_URL = 'http://127.0.0.1:8000/crops'
+const CROPS_URL = 'http://127.0.0.1:8000/definitions/crops'
 
 const apiCrop = {
     id: 1, name: 'Durum', modified_by: 'Zhe', modified_at: '2026-11-16T10:00:00Z',

@@ -12,7 +12,7 @@ const isValidForecastYear = (year) =>
 
 export async function getForecastYears(){
     try {
-        const response = await fetch(`${baseURL}/forecast-years`)
+        const response = await fetch(`${baseURL}/forecast/years`)
 
         if (response.status !== 200) {
             throw new Error('Unrecognized status code for fetching forecast years.')

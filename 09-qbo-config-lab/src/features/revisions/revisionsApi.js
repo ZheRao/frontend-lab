@@ -15,7 +15,7 @@ const isValidRevision = (rev) =>
 
 export async function getRevisions() {
     try {
-        const response = await fetch(`${baseURL}/revisions`)
+        const response = await fetch(`${baseURL}/forecast/revisions`)
 
         if (response.status !== 200) {
             throw new Error('Unrecognized status code for fetching revisions.')

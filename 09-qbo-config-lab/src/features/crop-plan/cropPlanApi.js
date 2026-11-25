@@ -57,7 +57,7 @@ const fromApiCropPlan = (row) => ({
 
 export async function getCropPlan(clientId, forecastYear) {
     try {
-        const response = await fetch(`${baseURL}/crop-plan/${clientId}/${forecastYear}`)
+        const response = await fetch(`${baseURL}/forecast/inputs/crop-plan/${clientId}/${forecastYear}`)
 
         if (response.status !== 200) {
             throw new Error("Unexpected GET status.")
@@ -82,7 +82,7 @@ export async function getCropPlan(clientId, forecastYear) {
 
 export async function getCropPlanCategory() {
     try {
-        const response = await fetch(`${baseURL}/crop-plan/categories`)
+        const response = await fetch(`${baseURL}/forecast/inputs/crop-plan/categories`)
 
         if (response.status !== 200) {
             throw new Error("Unexpected GET status.")
@@ -118,7 +118,7 @@ export async function createCropPlan({
     let data 
     try {
         response = await fetch(
-            `${baseURL}/crop-plan`,
+            `${baseURL}/forecast/inputs/crop-plan`,
             {
                 method: "POST",
                 headers: {

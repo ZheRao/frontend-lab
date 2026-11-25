@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getForecastYears } from './forecastYearsApi'
 import { ApiError } from '../../ApiError'
 
-const FORECAST_YEARS_URL = 'http://127.0.0.1:8000/forecast-years'
+const FORECAST_YEARS_URL = 'http://127.0.0.1:8000/forecast/years'
 
 const apiYear = {
     forecast_year: 2026, modified_by: 'Zhe', modified_at: '2026-11-16T10:00:00Z',

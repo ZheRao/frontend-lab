@@ -15,7 +15,7 @@ const isValidCropData = (crop) =>
 
 export async function getCrops(){
     try {
-        const response = await fetch(`${baseURL}/crops`)
+        const response = await fetch(`${baseURL}/definitions/crops`)
 
         if (response.status !== 200) {
             throw new Error('Unrecognized status code when fetching crops.')

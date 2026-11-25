@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { getRevisions } from './revisionsApi'
 import { ApiError } from '../../ApiError'
 
-const REVISIONS_URL = 'http://127.0.0.1:8000/revisions'
+const REVISIONS_URL = 'http://127.0.0.1:8000/forecast/revisions'
 
 const apiRevision = {
     id: 1, name: 'Pre-seeding', revision_order: 1,
